@@ -1,15 +1,15 @@
 {
- "time": "2026-10-28T13:48:56Z",
+ "time": "2026-10-28T21:38:56Z",
  "ok": true,
- "message": "영상 21개 보고",
- "found": 21,
+ "message": "영상 20개 보고",
+ "found": 20,
  "quota": 860,
- "ai": "실패 → 규칙으로 대체 (Expecting value: line 1 column 1 (char 0))",
+ "ai": "실패 → 규칙으로 대체 (openai/gpt-4o-mini 응답 형식 이상 (text/plain): 'OK\\r\\n')",
  "excluded": {
   "수집": 399,
-  "길이 초과": 54,
-  "비서양권": 161,
-  "AI 영상": 5
+  "길이 초과": 51,
+  "비서양권": 168,
+  "AI 영상": 3
  },
- "seconds": 17
+ "seconds": 19
 }
