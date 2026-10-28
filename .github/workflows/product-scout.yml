@@ -2,16 +2,27 @@ name: "직원2 스카우터 - 리뷰 제품 발굴"
 
 on:
   schedule:
-    # 하루 2회: 한국시간 오전 9:47, 오후 9:47 (헌터 근무 직후)
-    - cron: "47 0,12 * * *"
-  workflow_dispatch: # Actions 탭의 "Run workflow" 버튼으로 바로 일 시키기
+    # 하루 2회: 한국시간 오전 10:47, 오후 10:47 (1회 약 400 할당량)
+    - cron: "47 1,13 * * *"
+  workflow_dispatch: # 홈페이지의 "더 찾아줘"·"담기" 버튼도 이걸로 일을 시킴
+    inputs:
+      mode:
+        description: "auto=정기 근무, more=더 찾아줘, capture=담은 제품만 평가"
+        type: choice
+        options: [auto, more, capture]
+        default: auto
+      site:
+        description: "찾을 사이트"
+        type: choice
+        options: [both, amazon, temu]
+        default: both
 
 permissions:
   contents: write
   models: read # 무료 AI (GitHub Models)
 
 concurrency:
-  group: staff-data # 직원들이 동시에 보고서를 올리다 충돌하지 않게 순서대로
+  group: product-scout
   cancel-in-progress: false
 
 jobs:
@@ -26,8 +37,9 @@ jobs:
 
       - name: 근무
         env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python staff/product_scout.py
+        run: python staff/product_scout.py --mode "${{ inputs.mode || 'auto' }}" --site "${{ inputs.site || 'both' }}"
 
       - name: 보고서 제출
         if: always() # 실패해도 '오류' 상태를 대시보드에 남김

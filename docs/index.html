@@ -98,17 +98,28 @@ details p { margin: 6px 0 0; padding: 6px 8px; background: var(--chip); border-r
 .pcard { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .pcard h3 { margin: 0; font-size: 16px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .new { font-size: 11px; background: var(--accent); color: #fff; padding: 1px 6px; border-radius: 4px; }
-.bars { display: grid; gap: 4px; }
-.bar { display: grid; grid-template-columns: 64px 1fr 22px; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
-.bar i { display: block; height: 6px; border-radius: 3px; background: var(--chip); overflow: hidden; }
-.bar i em { display: block; height: 100%; background: var(--accent); }
-.bar b { color: var(--text); font-variant-numeric: tabular-nums; text-align: right; }
-.hook { background: var(--chip); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
-.minis { display: flex; gap: 6px; }
-.minis a { width: 56px; aspect-ratio: 4/3; border-radius: 6px; overflow: hidden; background: #000; display: block; }
-.minis img { width: 100%; height: 100%; object-fit: cover; }
-.shop { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: auto; }
-.shop a { text-align: center; font-size: 12px; font-weight: 600; padding: 7px 0; border-radius: 8px; text-decoration: none; background: var(--chip); }
+.pthumb { position: relative; display: block; aspect-ratio: 16 / 10; background: var(--chip); border-radius: 8px; overflow: hidden; }
+.pthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pthumb.contain img { object-fit: contain; background: #fff; }
+.idea { background: var(--chip); border-radius: 8px; padding: 8px 10px; font-size: 13px; display: grid; gap: 4px; }
+.shop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: auto; }
+.shop a, .shop button { text-align: center; font: inherit; font-size: 12px; font-weight: 600; padding: 7px 0; border-radius: 8px; text-decoration: none; background: var(--chip); border: 0; color: var(--text); cursor: pointer; }
+.shop a.main { grid-column: 1 / -1; background: var(--text); color: var(--bg); }
+.shop button.on { background: var(--warn-soft); color: var(--warn); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+.toolbar .spacer { flex: 1; }
+.more { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: calc(100% - 32px); z-index: 20; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+.working { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin: 12px 0; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; padding: 16px; z-index: 10; }
+.sheet { background: var(--surface); border-radius: 14px; padding: 18px; width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; display: grid; gap: 12px; }
+.sheet h3 { margin: 0; font-size: 17px; }
+.sheet ol { margin: 0; padding-left: 20px; font-size: 14px; display: grid; gap: 4px; }
+.field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.field input, .field textarea { font: inherit; font-size: 14px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.field textarea { min-height: 70px; resize: vertical; }
+.bm { display: inline-block; padding: 8px 14px; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 700; text-decoration: none; cursor: grab; }
+code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
 .empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 32px 20px; text-align: center; color: var(--muted); grid-column: 1 / -1; }
 .help { margin-top: 28px; font-size: 13px; color: var(--muted); }
 .help summary { cursor: pointer; }
@@ -118,7 +129,7 @@ details p { margin: 6px 0 0; padding: 6px 8px; background: var(--chip); border-r
   .grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .stats { grid-template-columns: 1fr 1fr; } .stat:nth-child(n+5) { display: none; }
   .body { padding: 8px; }
-  .shop { grid-template-columns: 1fr 1fr; }
+  .shop { grid-template-columns: 1fr 1fr 1fr; }
 }
 </style>
 </head>
@@ -149,7 +160,7 @@ const shortUrl = (id) => `https://www.youtube.com/shorts/${encodeURIComponent(id
 async function getJSON(path, fallback) {
   if (S.cache[path]) return S.cache[path];
   try {
-    const res = await fetch(path, { cache: "no-cache" });
+    const res = await fetch(`${path}?t=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) return fallback;
     return (S.cache[path] = await res.json());
   } catch { return fallback; }
@@ -173,6 +184,112 @@ function state(st, status) {
 
 const workflowUrl = (st) => `https://github.com/${S.cfg.repo}/actions/workflows/${st.workflow}`;
 
+// ---------------- GitHub 연결 (토큰은 이 기기 브라우저에만 저장) ----------------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+const token = () => store.get("gh-token", "");
+
+async function gh(path, method = "GET", body) {
+  const res = await fetch(`https://api.github.com${path}`, {
+    method, body: body ? JSON.stringify(body) : undefined,
+    headers: { Authorization: `Bearer ${token()}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28",
+      ...(body ? { "Content-Type": "application/json" } : {}) },
+  });
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ${(await res.text()).slice(0, 160)}`);
+  return res.status === 204 ? null : res.json();
+}
+function b64(text) {
+  const bytes = new TextEncoder().encode(text);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+function toast(msg, ms = 4000) {
+  document.querySelector(".toast")?.remove();
+  const el = document.createElement("div");
+  el.className = "toast"; el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+// 직원에게 일 시키기: 토큰이 있으면 바로 실행, 없으면 GitHub 화면으로
+async function runStaff(st, inputs) {
+  if (!token()) { window.open(workflowUrl(st), "_blank", "noopener"); return; }
+  try {
+    const status = await getJSON(`data/${st.id}/status.json`, null);
+    await gh(`/repos/${S.cfg.repo}/actions/workflows/${st.workflow}/dispatches`, "POST", { ref: "main", ...(inputs ? { inputs } : {}) });
+    store.set("working", { id: st.id, since: Date.now(), prev: status?.time || "" });
+    toast(`${st.name}에게 일을 시켰어요. 3~5분 뒤 자동으로 새로고침됩니다.`);
+    watchWork();
+  } catch (e) { toast(`실행 실패: ${e.message}`, 7000); }
+}
+
+// 일 시킨 뒤 보고서가 올라올 때까지 20초마다 확인
+let watchTimer = null;
+function watchWork() {
+  clearTimeout(watchTimer);
+  const w = store.get("working", null);
+  const box = document.getElementById("working");
+  if (!w || Date.now() - w.since > 12 * 60e3) { store.del("working"); box?.remove(); return; }
+  const st = S.cfg.staff.find((s) => s.id === w.id);
+  const mins = Math.floor((Date.now() - w.since) / 60e3);
+  const html = `⏳ ${esc(st?.name)} 근무 중… (${mins}분 경과, 보고서가 올라오면 자동으로 새로고침)`;
+  if (box) box.innerHTML = html;
+  else app.insertAdjacentHTML("afterbegin", `<div class="working" id="working">${html}</div>`);
+  watchTimer = setTimeout(async () => {
+    delete S.cache[`data/${w.id}/status.json`];
+    const status = await getJSON(`data/${w.id}/status.json`, null);
+    if (status && status.time !== w.prev && new Date(status.time) > new Date(w.since - 60e3)) {
+      store.del("working");
+      toast(`${st?.name} 보고서 도착: ${status.message}`, 6000);
+      route();
+    } else watchWork();
+  }, 20000);
+}
+
+function settingsModal() {
+  const has = !!token();
+  const el = document.createElement("div");
+  el.className = "modal";
+  el.innerHTML = `<div class="sheet">
+    <h3>⚙️ GitHub 연결 (한 번만)</h3>
+    <p class="muted" style="margin:0">연결하면 이 화면에서 바로 <b>지금 일 시키기 · 더 찾아줘 · 스카우터에 담기</b>를 할 수 있어요. 토큰은 <b>이 기기 브라우저에만</b> 저장됩니다.</p>
+    <ol>
+      <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">토큰 만들기 페이지</a>를 엽니다 (GitHub 로그인)</li>
+      <li>Token name: <code>shorts-studio</code>, Expiration: 원하는 기간 (예: 1년)</li>
+      <li>Repository access: <b>Only select repositories</b> → <code>${esc(S.cfg.repo.split("/")[1])}</code></li>
+      <li>Permissions(Repository)에서 <b>Actions: Read and write</b>, <b>Contents: Read and write</b></li>
+      <li><b>Generate token</b> → 나온 토큰(<code>github_pat_…</code>)을 아래에 붙여넣기</li>
+    </ol>
+    <label class="field">토큰<input id="tok" type="password" placeholder="${has ? "저장됨 (바꾸려면 새로 입력)" : "github_pat_..."}" autocomplete="off"></label>
+    <div class="actions">
+      <button class="btn primary" id="tokSave">저장</button>
+      ${has ? `<button class="btn" id="tokDel">연결 해제</button>` : ""}
+      <button class="btn" id="tokClose">닫기</button>
+    </div>
+    <p class="muted" style="margin:0">⚠️ 이 토큰이 있으면 저장소를 수정할 수 있으니, 공용 PC에서는 저장하지 마세요.</p>
+  </div>`;
+  document.body.appendChild(el);
+  const close = () => el.remove();
+  el.onclick = (e) => { if (e.target === el) close(); };
+  el.querySelector("#tokClose").onclick = close;
+  el.querySelector("#tokDel")?.addEventListener("click", () => { store.del("gh-token"); toast("연결을 해제했어요"); close(); route(); });
+  el.querySelector("#tokSave").onclick = async () => {
+    const v = el.querySelector("#tok").value.trim();
+    if (!v) return close();
+    store.set("gh-token", v);
+    try {
+      await gh(`/repos/${S.cfg.repo}`);
+      toast("GitHub 연결 완료!");
+      close(); route();
+    } catch (e) { store.del("gh-token"); toast(`토큰 확인 실패: ${e.message}`, 7000); }
+  };
+}
+
 // ---------------- 대시보드 ----------------
 async function dashboard() {
   const cfg = S.cfg;
@@ -187,7 +304,8 @@ async function dashboard() {
 
   app.innerHTML = `
     <header><h1>${esc(cfg.studio)}<small>직원 관리</small></h1>
-      <div class="muted">${latest ? `마지막 보고 ${esc(kst(latest))} (${ago(latest)})` : "아직 보고가 없습니다"}</div></header>
+      <div class="actions"><span class="muted">${latest ? `마지막 보고 ${esc(kst(latest))} (${ago(latest)})` : "아직 보고가 없습니다"}</span>
+        <button class="btn" data-settings>${token() ? "✅ GitHub 연결됨" : "⚙️ GitHub 연결"}</button></div></header>
     <div class="kpis">
       <div class="kpi"><b>${working} / ${cfg.staff.length}명</b><span>정상 근무 중</span></div>
       <div class="kpi"><b>${hunter?.index.filter((e) => kstDay(e.time) === today).length ?? 0}회</b><span>오늘 헌터 근무</span></div>
@@ -214,7 +332,7 @@ async function dashboard() {
           ${status ? `<div class="msg ${status.ok ? "" : "err"}">${esc(status.message)}${status.ai ? `<br><small>AI 판단: ${esc(status.ai)}</small>` : ""}</div>` : `<div class="msg">아직 첫 근무 전입니다. "지금 일 시키기"로 바로 시작할 수 있어요.</div>`}
           <div class="actions">
             <a class="btn primary" href="#${esc(st.id)}">업무 보고서</a>
-            <a class="btn" href="${workflowUrl(st)}" target="_blank" rel="noopener">지금 일 시키기 ↗</a>
+            <button class="btn" data-run="${esc(st.id)}">지금 일 시키기${token() ? "" : " ↗"}</button>
           </div>
         </article>`;
       }).join("")}
@@ -225,7 +343,8 @@ async function dashboard() {
         </article>`).join("")}
     </div>
     <details class="help"><summary>"지금 일 시키기" 사용법</summary>
-      <p>버튼을 누르면 GitHub 화면이 열립니다. 오른쪽의 <b>Run workflow</b>, 이어서 초록 <b>Run workflow</b>를 누르면 2~3분 뒤 보고서가 갱신됩니다. (GitHub 로그인 필요)</p>
+      <p><b>GitHub 연결</b>을 해두면 버튼 한 번으로 바로 일을 시키고, 보고서가 올라오면 자동으로 새로고침됩니다.<br>
+      연결 전에는 GitHub 화면이 열리니 오른쪽 <b>Run workflow</b> → 초록 <b>Run workflow</b>를 누르세요.</p>
     </details>`;
 }
 
@@ -245,9 +364,9 @@ async function staffHeader(st) {
       <details><summary>근무 일지 (최근 ${Math.min(index.length, 12)}회)</summary>
         <div class="log-box"><table class="log"><tr><th>시각</th><th>보고</th><th>메모</th></tr>
         ${index.slice(0, 12).map((e) => `<tr><td>${esc(kst(e.time))}</td><td>${e.count}개${e.new != null ? ` (새 ${e.new})` : ""}</td>
-          <td class="wrap-cell">${esc(e.excluded ? Object.entries(e.excluded).map(([k, v]) => `${k} ${v}`).join(" · ") : e.amazon ? `아마존 ${e.amazon}` : "")}${e.ai ? ` · AI ${esc(e.ai)}` : ""}</td></tr>`).join("")}
+          <td class="wrap-cell">${esc(e.excluded ? Object.entries(e.excluded).map(([k, v]) => `${k} ${v}`).join(" · ") : e.mode ? `${({ auto: "정기 근무", more: "더 찾아줘", capture: "담은 제품 평가" })[e.mode] || e.mode}${e.site && e.site !== "both" ? ` (${e.site})` : ""}${e.captured ? ` · 담기 ${e.captured}` : ""}${e.searched?.length ? ` · 검색: ${e.searched.join(", ")}` : ""}` : "")}${e.ai ? ` · AI ${esc(e.ai)}` : ""}</td></tr>`).join("")}
         </table></div></details>
-      <div class="actions"><a class="btn" href="${workflowUrl(st)}" target="_blank" rel="noopener">지금 일 시키기 ↗</a></div>
+      <div class="actions"><button class="btn" data-run="${esc(st.id)}">지금 일 시키기${token() ? "" : " ↗"}</button></div>
     </section>`;
   return { html, index };
 }
@@ -336,56 +455,179 @@ async function hunterPage(st) {
 }
 
 // ---------------- 스카우터 보고서 ----------------
+const SITE_KO = { amazon: "아마존", temu: "테무" };
+
+function bookmarklet() {
+  const home = location.origin + location.pathname;
+  const code = `(()=>{const q=s=>document.querySelector(s),m=n=>(q('meta[property="'+n+'"]')||{}).content,h=location.hostname,s=/temu/.test(h)?'temu':/amazon/.test(h)?'amazon':'';if(!s){alert('아마존이나 테무 상품 페이지에서 눌러주세요');return}let u=location.href.split('#')[0];const a=u.match(/\\/(?:dp|gp\\/product)\\/([A-Z0-9]{10})/);u=a?location.origin+'/dp/'+a[1]:u.split('?')[0];const d={site:s,url:u,title:((q('#productTitle')||{}).innerText||m('og:title')||document.title).trim().slice(0,200),image:(q('#landingImage')||{}).src||m('og:image')||'',price:((q('.a-price .a-offscreen')||{}).innerText||'').trim(),has_video:!!q('video')};window.open('${home}#capture='+encodeURIComponent(JSON.stringify(d)))})()`;
+  return "javascript:" + encodeURIComponent(code);
+}
+
+async function sendCapture(item) {
+  if (!token()) { store.set("pending-capture", item); settingsModal(); toast("먼저 GitHub 연결을 해주세요. 연결 후 다시 '담기'를 누르면 됩니다.", 6000); return false; }
+  const name = `${new Date().toISOString().replace(/[:.]/g, "-")}-${Math.random().toString(36).slice(2, 7)}.json`;
+  await gh(`/repos/${S.cfg.repo}/contents/docs/data/product-scout/inbox/${name}`, "PUT",
+    { message: `스카우터에 담기: ${(item.title || item.url).slice(0, 50)}`, content: b64(JSON.stringify(item)) });
+  store.del("pending-capture");
+  const st = S.cfg.staff.find((s) => s.id === "product-scout");
+  await runStaff(st, { mode: "capture", site: "both" });
+  return true;
+}
+
+function captureForm(pre = {}) {
+  const el = document.createElement("div");
+  el.className = "modal";
+  el.innerHTML = `<div class="sheet">
+    <h3>➕ 스카우터에 담기</h3>
+    ${pre.image ? `<div class="pthumb contain" style="max-height:200px"><img src="${safeUrl(pre.image)}" alt="" onerror="this.parentNode.remove()"></div>` : ""}
+    <label class="field">상품 페이지 주소 (아마존·테무)<input id="cUrl" value="${esc(pre.url || "")}" placeholder="https://www.temu.com/... 또는 https://www.amazon.com/..."></label>
+    <label class="field">상품명 (모르면 비워도 됨)<input id="cTitle" value="${esc(pre.title || "")}"></label>
+    <label class="field">가격 (선택)<input id="cPrice" value="${esc(pre.price || "")}"></label>
+    <label class="field">메모: 설명 영상에서 뭐가 신기했나요? (AI가 가장 중요하게 참고)<textarea id="cMemo" placeholder="예) 철사를 종이처럼 자름, 색이 무지개로 바뀜">${esc(pre.memo || "")}</textarea></label>
+    <div class="actions"><button class="btn primary" id="cSend">담기</button><button class="btn" id="cClose">닫기</button></div>
+    <p class="muted" style="margin:0">담으면 스카우터가 2~4분 안에 호기심 점수·쇼츠 제목·촬영 아이디어를 붙여서 보고합니다.</p>
+  </div>`;
+  document.body.appendChild(el);
+  const close = () => { el.remove(); if (location.hash.startsWith("#capture")) location.hash = "#product-scout"; };
+  el.onclick = (e) => { if (e.target === el) close(); };
+  el.querySelector("#cClose").onclick = close;
+  el.querySelector("#cSend").onclick = async (ev) => {
+    const url = el.querySelector("#cUrl").value.trim();
+    if (!/^https:\/\/([\w-]+\.)*(amazon\.[a-z.]+|temu\.com|amzn\.(to|asia|eu)|a\.co)\//i.test(url)) { toast("아마존이나 테무 상품 주소를 넣어주세요"); return; }
+    const item = { ...pre, url, site: /temu/i.test(url) ? "temu" : "amazon", title: el.querySelector("#cTitle").value.trim(),
+      price: el.querySelector("#cPrice").value.trim(), memo: el.querySelector("#cMemo").value.trim() };
+    ev.target.disabled = true; ev.target.textContent = "담는 중…";
+    try {
+      if (await sendCapture(item)) toast("담았어요! 평가가 끝나면 스카우터 보고서에 '내가 담음'으로 나옵니다.", 6000);
+      el.remove(); // 연결 전이면 연결 후 이 내용으로 다시 열림
+      return;
+    } catch (e) { toast(`담기 실패: ${e.message}`, 7000); }
+    ev.target.disabled = false; ev.target.textContent = "담기";
+  };
+}
+
 async function scoutPage(st) {
-  const { html, index } = await staffHeader(st);
+  const { html } = await staffHeader(st);
+  const pool = await getJSON(`data/${st.id}/products.json`, []);
+  let site = store.get("scout-tab", "amazon"), shown = 10, showAll = false;
+  const seen = new Set(store.get("scout-seen", []));
+  const favs = new Set(store.get("scout-favs", []));
+  const sessionNew = new Set(pool.filter((p) => !seen.has(p.id)).map((p) => p.id)); // 이번에 처음 보는 제품
+
   app.innerHTML = html + `
-    <div class="controls">
-      ${runSelect(index)}
-      <select id="sort"><option value="score">종합순</option><option value="novelty">신박함순</option><option value="fun">재미순</option><option value="review_fit">리뷰 적합순</option><option value="buy_hits">구매의도순</option></select>
-      <label class="check"><input type="checkbox" id="onlyNew"> 새 제품만</label>
+    <div class="tabs" id="siteTabs"></div>
+    <div class="toolbar">
+      <select id="src"><option value="">전체 출처</option><option value="youtube">자동 발굴 (영상)</option><option value="capture">내가 담은 것</option><option value="fav">⭐ 찜한 것</option></select>
+      <select id="sort"><option value="curiosity">호기심순</option><option value="added">최신순</option></select>
+      <label class="check"><input type="checkbox" id="all"> 이미 본 것도 보기</label>
+      <span class="spacer"></span>
+      <button class="btn" id="addBtn">➕ 담기</button>
+      <button class="btn primary" id="findBtn"></button>
     </div>
     <div class="muted" id="summary"></div><br>
-    <div class="grid" id="grid"></div>`;
-  if (!index.length) { document.getElementById("grid").innerHTML = `<div class="empty">아직 보고서가 없습니다.</div>`; return; }
+    <div class="grid" id="grid"></div>
+    <div class="more" id="moreBox"></div>
+    <details class="help"><summary>🔖 아마존·테무에서 바로 담는 버튼 만들기 (PC)</summary>
+      <p>아래 빨간 버튼을 브라우저 <b>북마크바로 끌어다 놓으세요</b>. 아마존·테무 상품 페이지에서 설명 영상을 보다가 신기하면 북마크바의 버튼을 누르면 됩니다.</p>
+      <p><a class="bm" href="${esc(bookmarklet())}" onclick="event.preventDefault();toast('북마크바로 끌어다 놓아 주세요')">🛒 스카우터에 담기</a></p>
+      <p>휴대폰에서는 상품 페이지 주소를 복사해서 이 화면의 <b>➕ 담기</b>에 붙여넣으세요. 버튼이 안 먹는 사이트도 이 방법을 쓰면 됩니다.</p>
+    </details>`;
   const $ = (id) => document.getElementById(id);
-  let run;
-  async function load() { run = await getJSON(`data/${st.id}/${$("run").value}`, { products: [] }); render(); }
-  function render() {
-    const sort = $("sort").value;
-    let list = run.products.filter((p) => !$("onlyNew").checked || p.new);
-    list = [...list].sort((a, b) => (b[sort] ?? 0) - (a[sort] ?? 0));
-    $("summary").textContent = `${kst(run.time)} 보고 · 제품 ${run.products.length}개 (새 제품 ${run.new}) · 아마존 ${run.amazon} · AI ${run.ai}`;
-    const bar = (label, v) => `<div class="bar">${label}<i><em style="width:${v * 10}%"></em></i><b>${v}</b></div>`;
-    $("grid").innerHTML = list.length ? list.map((p) => `<article class="pcard">
-        <h3>${esc(p.name_ko || p.name_en)}${p.new ? `<span class="new">NEW</span>` : ""}</h3>
-        <div class="sub">${p.name_ko ? esc(p.name_en) + " · " : ""}${esc(p.from)}${p.buy_hits ? ` · 구매의도 댓글 ${p.buy_hits}` : ""}</div>
-        ${p.ai ? `<div class="bars">${bar("신박함", p.novelty)}${bar("재미", p.fun)}${bar("리뷰 적합", p.review_fit)}</div>` : `<div class="sub">AI 평가 없음 · 스타일 ${p.review_fit}/10</div>`}
-        ${p.why_ko ? `<div class="note"><b>왜</b>${esc(p.why_ko)}</div>` : ""}
-        ${p.hook_ko || p.test_ko ? `<div class="hook">${p.hook_ko ? `🎬 <b>${esc(p.hook_ko)}</b>` : ""}${p.hook_ko && p.test_ko ? "<br>" : ""}${p.test_ko ? `📷 ${esc(p.test_ko)}` : ""}</div>` : ""}
-        ${p.videos?.length ? `<div class="minis">${p.videos.map((v) => `<a href="${shortUrl(v.video_id)}" target="_blank" rel="noopener" title="${esc(v.title)} · ${fmt(v.views)}회"><img loading="lazy" src="${thumb(v.video_id)}" alt="" onerror="this.style.visibility='hidden'"></a>`).join("")}<span class="sub">원본 영상 ${p.videos.length}개 · 최고 ${fmt(Math.max(...p.videos.map((v) => v.views)))}회</span></div>` : ""}
-        <div class="shop">
-          <a href="${safeUrl(p.links.coupang)}" target="_blank" rel="noopener">쿠팡</a>
-          <a href="${safeUrl(p.links.amazon)}" target="_blank" rel="noopener">아마존</a>
-          <a href="${safeUrl(p.links.temu)}" target="_blank" rel="noopener">테무</a>
-          <a href="${safeUrl(p.links.aliexpress)}" target="_blank" rel="noopener">알리</a>
-        </div>
-      </article>`).join("") : `<div class="empty">조건에 맞는 제품이 없습니다.</div>`;
+
+  function score(p) { return (p.evaluated ? 100 : 0) + p.curiosity * 10 + (p.source === "capture" ? 5 : 0); }
+  function list() {
+    const src = $("src").value;
+    let l = pool.filter((p) => p.site === site);
+    if (src === "fav") l = l.filter((p) => favs.has(p.id));
+    else if (src) l = l.filter((p) => p.source === src);
+    if (!showAll && src !== "fav") l = l.filter((p) => sessionNew.has(p.id));
+    return l.sort((a, b) => $("sort").value === "added" ? b.added.localeCompare(a.added) : score(b) - score(a));
   }
-  $("run").onchange = load; $("sort").onchange = render; $("onlyNew").onchange = render;
-  load();
+
+  function card(p) {
+    const img = p.source === "capture" ? p.image : p.video ? thumb(p.video.video_id) : "";
+    const searchUrl = p.site === "temu" ? p.links.temu : p.links.amazon;
+    return `<article class="pcard">
+      ${img ? `<a class="pthumb ${p.source === "capture" ? "contain" : ""}" href="${safeUrl(p.source === "capture" ? p.url : `https://www.youtube.com/watch?v=${encodeURIComponent(p.video.video_id)}`)}" target="_blank" rel="noopener">
+        <img loading="lazy" src="${safeUrl(img)}" alt="" onerror="this.style.visibility='hidden'">
+        ${p.evaluated ? `<span class="badge tr">호기심 ${p.curiosity}</span>` : `<span class="badge tr" style="background:#888">평가 대기</span>`}
+        ${p.video ? `<span class="badge br">▶ 원본 영상</span>` : ""}</a>` : ""}
+      <h3>${esc(p.name_ko || p.title || p.name_en)}${sessionNew.has(p.id) ? `<span class="new">NEW</span>` : ""}</h3>
+      <div class="sub">${p.name_ko ? esc(p.name_en) + " · " : ""}${p.source === "capture" ? `내가 담음${p.price ? " · " + esc(p.price) : ""}` : `영상: ${esc(p.video.title)} (${fmt(p.video.views)}회)`}</div>
+      ${p.memo ? `<div class="note"><b>내 메모</b>${esc(p.memo)}</div>` : ""}
+      ${p.wow_ko ? `<div class="note"><b>신기한 점</b>${esc(p.wow_ko)}</div>` : ""}
+      ${p.hook_ko || p.test_ko || p.reaction_ko ? `<div class="idea">
+        ${p.hook_ko ? `<div>🎬 <b>${esc(p.hook_ko)}</b></div>` : ""}
+        ${p.test_ko ? `<div>📷 ${esc(p.test_ko)}</div>` : ""}
+        ${p.reaction_ko ? `<div>😲 ${esc(p.reaction_ko)}</div>` : ""}</div>` : ""}
+      ${p.caution_ko ? `<div class="note"><b>⚠️ 주의</b>${esc(p.caution_ko)}</div>` : ""}
+      ${!p.evaluated ? `<div class="sub">AI 평가 대기 중 — 다음 근무 때 평가됩니다</div>` : ""}
+      <div class="shop">
+        ${p.source === "capture" ? `<a class="main" href="${safeUrl(p.url)}" target="_blank" rel="noopener">${SITE_KO[p.site]} 상품 페이지</a>`
+          : `<a class="main" href="${safeUrl(searchUrl)}" target="_blank" rel="noopener">${SITE_KO[p.site]}에서 찾기</a>`}
+        <a href="${safeUrl(p.links.coupang)}" target="_blank" rel="noopener">쿠팡</a>
+        <a href="${safeUrl(p.links.aliexpress)}" target="_blank" rel="noopener">알리</a>
+        <button data-fav="${esc(p.id)}" class="${favs.has(p.id) ? "on" : ""}">${favs.has(p.id) ? "⭐ 찜함" : "☆ 찜"}</button>
+      </div>
+    </article>`;
+  }
+
+  function render() {
+    const counts = { amazon: 0, temu: 0 };
+    for (const p of pool) if (showAll || sessionNew.has(p.id)) counts[p.site] = (counts[p.site] || 0) + 1;
+    $("siteTabs").innerHTML = ["amazon", "temu"].map((s) => `<button class="tab ${s === site ? "on" : ""}" data-site="${s}">${SITE_KO[s]} <small class="muted">${counts[s] || 0}</small></button>`).join("");
+    $("findBtn").textContent = `🔎 ${SITE_KO[site]}에서 더 찾아줘`;
+    const l = list();
+    const page = l.slice(0, shown);
+    page.forEach((p) => seen.add(p.id));
+    store.set("scout-seen", [...seen].slice(-3000));
+    $("summary").textContent = `${SITE_KO[site]} · ${showAll ? "전체" : "새로 보는"} 제품 ${l.length}개 중 ${page.length}개 표시 · 전체 보관 ${pool.length}개`;
+    $("grid").innerHTML = page.length ? page.map(card).join("") : `<div class="empty">${showAll ? "제품이 없습니다." : "새 제품을 다 봤어요 👍<br>위의 <b>더 찾아줘</b>를 누르면 스카우터가 추가로 찾아옵니다. (1회 약 2~4분)"}</div>`;
+    $("moreBox").innerHTML = l.length > shown ? `<button class="btn" id="moreBtn">더 보기 (${Math.min(10, l.length - shown)}개 더)</button>` : "";
+    $("moreBtn")?.addEventListener("click", () => { shown += 10; render(); });
+  }
+
+  $("siteTabs").onclick = (e) => { const b = e.target.closest("[data-site]"); if (b) { site = b.dataset.site; store.set("scout-tab", site); shown = 10; render(); } };
+  $("src").onchange = () => { shown = 10; render(); };
+  $("sort").onchange = render;
+  $("all").onchange = (e) => { showAll = e.target.checked; shown = 10; render(); };
+  $("grid").onclick = (e) => {
+    const b = e.target.closest("[data-fav]"); if (!b) return;
+    favs.has(b.dataset.fav) ? favs.delete(b.dataset.fav) : favs.add(b.dataset.fav);
+    store.set("scout-favs", [...favs]); render();
+  };
+  $("addBtn").onclick = () => captureForm();
+  $("findBtn").onclick = () => runStaff(st, { mode: "more", site });
+  render();
 }
 
 async function route() {
   S.cache = {};
   if (!S.cfg) S.cfg = await getJSON("data/staff.json", null);
   if (!S.cfg) { app.innerHTML = `<div class="empty">설정 파일(data/staff.json)을 불러오지 못했습니다.</div>`; return; }
-  const id = location.hash.slice(1);
-  const st = S.cfg.staff.find((s) => s.id === id);
+  const hash = location.hash.slice(1);
+  if (hash.startsWith("capture=")) {  // 북마크 버튼으로 넘어온 상품
+    let item = {};
+    try { item = JSON.parse(decodeURIComponent(hash.slice(8))); } catch {}
+    history.replaceState(null, "", "#product-scout");
+    await route();
+    captureForm(item);
+    return;
+  }
+  const st = S.cfg.staff.find((s) => s.id === hash);
   window.scrollTo(0, 0);
-  if (!st) return dashboard();
-  if (st.report === "videos") return hunterPage(st);
-  if (st.report === "products") return scoutPage(st);
+  if (!st) await dashboard();
+  else if (st.report === "videos") await hunterPage(st);
+  else if (st.report === "products") await scoutPage(st);
+  const pending = store.get("pending-capture", null);
+  if (pending && token()) captureForm(pending);
+  if (store.get("working", null)) watchWork();
 }
+document.addEventListener("click", (e) => {
+  const run = e.target.closest("[data-run]");
+  if (run) { const st = S.cfg.staff.find((s) => s.id === run.dataset.run); if (st) runStaff(st, st.id === "product-scout" ? { mode: "auto", site: "both" } : undefined); }
+  if (e.target.closest("[data-settings]")) settingsModal();
+});
 window.addEventListener("hashchange", route);
 route();
 </script>

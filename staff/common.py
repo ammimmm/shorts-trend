@@ -14,7 +14,7 @@ DATA = ROOT / "docs" / "data"
 CONFIG = Path(__file__).resolve().parent / "config"
 YT_API = "https://www.googleapis.com/youtube/v3"
 AI_URL = "https://models.github.ai/inference/chat/completions"
-AI_MODEL = os.environ.get("AI_MODEL", "openai/gpt-4.1-mini")
+AI_MODELS = os.environ.get("AI_MODELS", "openai/gpt-4.1-mini,openai/gpt-4o-mini")
 
 
 def now_utc():
@@ -78,54 +78,67 @@ def parse_duration(iso):
 # ---------- 무료 AI (GitHub Models) ----------
 
 class AI:
-    """GitHub Actions의 GITHUB_TOKEN으로 GitHub Models를 무료로 호출. 실패하면 None을 돌려주고 규칙 기반으로 진행."""
+    """GitHub Actions의 GITHUB_TOKEN으로 GitHub Models를 무료로 호출. 실패하면 None을 돌려주고 규칙 기반으로 진행.
+    첫 모델이 안 되면 다음 모델로 바꿔서 다시 시도."""
 
     def __init__(self):
         self.token = os.environ.get("GITHUB_TOKEN", "").strip()
+        self.models = [m.strip() for m in AI_MODELS.split(",") if m.strip()]
         self.calls = 0
+        self.ok = 0
         self.errors = []
 
     @property
     def enabled(self):
         return bool(self.token) and os.environ.get("AI_DISABLED") != "1"
 
+    def _call(self, model, system, user, max_tokens, json_mode):
+        body = {"model": model, "max_tokens": max_tokens,
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
+        if json_mode:
+            body["response_format"] = {"type": "json_object"}
+        resp = requests.post(AI_URL, json=body, timeout=120, headers={
+            "Authorization": f"Bearer {self.token}",
+            "Accept": "application/vnd.github+json",
+            "Content-Type": "application/json",
+        })
+        self.calls += 1
+        if resp.status_code != 200:
+            raise RuntimeError(f"{model} HTTP {resp.status_code}: {resp.text[:200]}")
+        try:
+            text = resp.json()["choices"][0]["message"]["content"] or ""
+        except (ValueError, KeyError, IndexError, TypeError):
+            raise RuntimeError(f"{model} 응답 형식 이상 ({resp.headers.get('content-type')}): {resp.text[:200]!r}")
+        if "{" not in text:
+            raise RuntimeError(f"{model} JSON 없는 답변: {text[:200]!r}")
+        return json.loads(text[text.find("{"):text.rfind("}") + 1])
+
     def ask_json(self, system, user, max_tokens=4000):
         if not self.enabled:
             return None
-        try:
-            resp = requests.post(AI_URL, timeout=120, headers={
-                "Authorization": f"Bearer {self.token}",
-                "Accept": "application/vnd.github+json",
-                "Content-Type": "application/json",
-            }, json={
-                "model": AI_MODEL,
-                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-                "response_format": {"type": "json_object"},
-                "max_tokens": max_tokens,
-            })
-            self.calls += 1
-            if resp.status_code != 200:
-                raise RuntimeError(f"HTTP {resp.status_code}: {resp.text[:200]}")
-            try:
-                text = resp.json()["choices"][0]["message"]["content"] or ""
-            except (ValueError, KeyError, IndexError, TypeError):
-                raise RuntimeError(f"응답 형식 이상 ({resp.headers.get('content-type')}): {resp.text[:200]!r}")
-            if "{" not in text:
-                raise RuntimeError(f"JSON 없는 답변: {text[:200]!r}")
-            return json.loads(text[text.find("{"):text.rfind("}") + 1])
-        except Exception as e:  # AI가 안 돼도 직원은 규칙으로 계속 일함
-            self.errors.append(str(e)[:200])
-            print(f"  [AI 실패] {e}")
-            return None
+        for model in list(self.models):
+            for json_mode in (True, False):
+                try:
+                    result = self._call(model, system, user, max_tokens, json_mode)
+                    self.ok += 1
+                    self.models.remove(model)
+                    self.models.insert(0, model)  # 된 모델을 다음에도 먼저 사용
+                    return result
+                except Exception as e:  # AI가 안 돼도 직원은 규칙으로 계속 일함
+                    self.errors.append(str(e)[:300])
+                    print(f"  [AI 실패] {e}")
+        return None
 
     def status(self):
         if not self.enabled:
             return "미사용"
-        if self.calls and not self.errors:
-            return f"사용 ({AI_MODEL})"
-        if self.errors and len(self.errors) >= max(self.calls, 1):
-            return f"실패 → 규칙으로 대체 ({self.errors[-1][:80]})"
-        return f"일부 실패 ({len(self.errors)}건)"
+        if self.ok and not self.errors:
+            return f"사용 ({self.models[0]})"
+        if self.ok:
+            return f"사용 ({self.models[0]}, 재시도 {len(self.errors)}건)"
+        if self.errors:
+            return f"실패 → 규칙으로 대체 ({self.errors[-1][:150]})"
+        return "호출 없음"
 
 
 # ---------- 업무 보고 ----------

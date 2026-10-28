@@ -2,8 +2,8 @@ name: "직원1 헌터 - 해외 영상 소스"
 
 on:
   schedule:
-    # 하루 10회 (UTC). 1회 약 870 할당량 → 하루 무료 한도 10,000 이내
-    - cron: "17 0,2,5,7,10,12,15,17,20,22 * * *"
+    # 하루 7회 (UTC). 1회 약 870 → 약 6,100. 남는 할당량은 스카우터가 사용 (하루 무료 한도 10,000)
+    - cron: "17 0,3,7,10,13,17,20 * * *"
   workflow_dispatch: # Actions 탭의 "Run workflow" 버튼으로 바로 일 시키기
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
   models: read # 무료 AI (GitHub Models)
 
 concurrency:
-  group: staff-data # 직원들이 동시에 보고서를 올리다 충돌하지 않게 순서대로
+  group: video-hunter # 같은 직원이 겹쳐서 근무하지 않게
   cancel-in-progress: false
 
 jobs:
