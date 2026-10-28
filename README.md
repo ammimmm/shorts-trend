@@ -60,6 +60,8 @@
 - **검색 키워드**: `keywords.txt`에 한 줄에 하나씩 적습니다. 키워드 하나에 할당량 100유닛이 듭니다.
 - **수집 국가나 기간**: `.github/workflows/collect.yml`의 `python trend_finder.py --json-dir docs/data` 줄 끝에 옵션을 붙입니다.
   - 예: `--region GB --days 3` (영국, 최근 3일)
+- **제외 국가와 단어**: 같은 줄의 `--exclude-countries IN,PK,BD --exclude-words meesho,flipkart,hindi`를 고칩니다.
+  - 기본값은 인도 쇼핑몰 영상이 상위를 많이 차지해서 제외하도록 해 둔 것입니다.
 - **수집 시간**: 같은 파일의 `cron` 줄을 고칩니다(UTC 기준, 한국시간에서 9시간을 뺀 값).
 
 ## 주의사항

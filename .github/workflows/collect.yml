@@ -28,7 +28,8 @@ jobs:
       - name: 수집 실행
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
-        run: python trend_finder.py --json-dir docs/data
+        # 국가/단어 제외는 필요에 맞게 수정 (인도 쇼핑몰 영상이 상위를 많이 차지해서 기본 제외)
+        run: python trend_finder.py --json-dir docs/data --exclude-countries IN,PK,BD --exclude-words meesho,flipkart,hindi
 
       - name: 결과 저장
         run: |

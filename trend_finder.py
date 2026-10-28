@@ -111,7 +111,7 @@ def fetch_buy_signals(key, video_id, max_comments):
     return len(hits), " | ".join(hits[:3])
 
 
-def build_rows(videos, channels, keyword_map, now, max_seconds):
+def build_rows(videos, channels, keyword_map, now, max_seconds, exclude_countries=(), exclude_words=()):
     rows = []
     for vid, v in videos.items():
         seconds = parse_duration(v["contentDetails"].get("duration"))
@@ -124,8 +124,14 @@ def build_rows(videos, channels, keyword_map, now, max_seconds):
         subs = 0 if ch_stats.get("hiddenSubscriberCount") else int(ch_stats.get("subscriberCount", 0))
         published = datetime.fromisoformat(v["snippet"]["publishedAt"].replace("Z", "+00:00"))
         hours = max((now - published).total_seconds() / 3600, 1)
+        country = ch.get("snippet", {}).get("country", "")
+        if country and country in exclude_countries:
+            continue
+        if exclude_words and any(w in v["snippet"]["title"].lower() for w in exclude_words):
+            continue
         rows.append({
             "video_id": vid,
+            "country": country,
             "title": v["snippet"]["title"],
             "channel": v["snippet"]["channelTitle"],
             "keywords": ", ".join(sorted(keyword_map[vid])),
@@ -157,7 +163,7 @@ def score(rows):
 
 
 COLUMNS = [
-    ("score", "종합점수", 9), ("title", "제목", 50), ("url", "링크", 14), ("channel", "채널", 20),
+    ("score", "종합점수", 9), ("title", "제목", 50), ("url", "링크", 14), ("channel", "채널", 20), ("country", "채널 국가", 8),
     ("views", "조회수", 12), ("views_per_hour", "시간당 조회수", 12), ("subs", "구독자", 11),
     ("outlier", "아웃라이어(조회/구독)", 12), ("engagement", "참여율%", 9), ("buy_hits", "구매의도 댓글", 10),
     ("buy_examples", "구매의도 댓글 예시", 60), ("seconds", "길이(초)", 8), ("published", "업로드(UTC)", 16),
@@ -188,7 +194,7 @@ def save_excel(rows, path):
     wb.save(path)
 
 
-JSON_FIELDS = ["video_id", "title", "channel", "keywords", "published", "seconds", "views", "likes",
+JSON_FIELDS = ["video_id", "title", "channel", "country", "keywords", "published", "seconds", "views", "likes",
                "comments", "subs", "outlier", "views_per_hour", "engagement", "buy_hits", "buy_examples", "score"]
 
 
@@ -222,6 +228,8 @@ def main():
     p.add_argument("--per-keyword", type=int, default=50, help="키워드당 수집 영상 수 (최대 50)")
     p.add_argument("--max-seconds", type=int, default=180, help="이 길이(초) 이하만 쇼츠로 간주 (기본 180)")
     p.add_argument("--comment-check", type=int, default=40, help="댓글 분석할 상위 영상 수 (영상당 1유닛)")
+    p.add_argument("--exclude-countries", default="", help="제외할 채널 국가 코드, 쉼표 구분 (예: IN,PK,BD)")
+    p.add_argument("--exclude-words", default="", help="제목에 이 단어가 있으면 제외, 쉼표 구분 (예: meesho,flipkart)")
     p.add_argument("--top", type=int, default=100, help="엑셀에 저장할 영상 수")
     p.add_argument("--out", default=str(BASE_DIR / "output"), help="엑셀 저장 폴더")
     p.add_argument("--json-dir", help="지정하면 엑셀 대신 홈페이지용 JSON을 이 폴더에 저장")
@@ -255,7 +263,9 @@ def main():
     videos = fetch_videos(key, list(keyword_map))
     channels = fetch_channels(key, list({v["snippet"]["channelId"] for v in videos.values()}))
     quota += -(-len(keyword_map) // 50) + -(-len(channels) // 50)
-    rows = build_rows(videos, channels, keyword_map, now, args.max_seconds)
+    exclude = {c.strip().upper() for c in args.exclude_countries.split(",") if c.strip()}
+    words = [w.strip().lower() for w in args.exclude_words.split(",") if w.strip()]
+    rows = build_rows(videos, channels, keyword_map, now, args.max_seconds, exclude, words)
 
     # 댓글 분석은 1차 점수 상위 영상에만 (할당량 절약)
     score(rows)
