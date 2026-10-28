@@ -1,0 +1,15 @@
+[
+ {
+  "file": "runs/20261028_1349.json",
+  "time": "2026-10-28T13:49:13Z",
+  "count": 21,
+  "excluded": {
+   "수집": 399,
+   "길이 초과": 54,
+   "비서양권": 161,
+   "AI 영상": 5
+  },
+  "quota": 860,
+  "ai": "실패 → 규칙으로 대체 (Expecting value: line 1 column 1 (char 0))"
+ }
+]
