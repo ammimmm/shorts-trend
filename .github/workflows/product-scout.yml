@@ -1,0 +1,34 @@
+name: "직원2 스카우터 - 리뷰 제품 발굴"
+
+on:
+  schedule:
+    # 하루 2회: 한국시간 오전 9:47, 오후 9:47 (헌터 근무 직후)
+    - cron: "47 0,12 * * *"
+  workflow_dispatch: # Actions 탭의 "Run workflow" 버튼으로 바로 일 시키기
+
+permissions:
+  contents: write
+  models: read # 무료 AI (GitHub Models)
+
+concurrency:
+  group: staff-data # 직원들이 동시에 보고서를 올리다 충돌하지 않게 순서대로
+  cancel-in-progress: false
+
+jobs:
+  work:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+
+      - name: 근무
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python staff/product_scout.py
+
+      - name: 보고서 제출
+        if: always() # 실패해도 '오류' 상태를 대시보드에 남김
+        run: bash staff/commit_report.sh "스카우터 근무"

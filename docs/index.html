@@ -3,288 +3,391 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>쇼츠 트렌드 레이더</title>
+<title>쇼츠 스튜디오 직원 관리</title>
 <style>
 :root {
-  --bg: #f6f6f4; --surface: #ffffff; --text: #1b1b1a; --muted: #6b6b66; --line: #e4e4df;
+  --bg: #f5f5f2; --surface: #ffffff; --text: #1b1b1a; --muted: #6b6b66; --line: #e3e3de; --chip: #efefea;
   --accent: #d93025; --accent-soft: #fde8e6; --good: #137333; --good-soft: #e6f4ea;
-  --warn: #b06000; --warn-soft: #fef3e0; --chip: #efefeb;
+  --warn: #a35a00; --warn-soft: #fdf1dc; --blue: #1a63c9; --blue-soft: #e7effb;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #121212; --surface: #1c1c1c; --text: #ececea; --muted: #9b9b96; --line: #2e2e2c;
+    --bg: #121212; --surface: #1c1c1c; --text: #ececea; --muted: #9b9b96; --line: #2e2e2c; --chip: #2a2a28;
     --accent: #ff6b5e; --accent-soft: #3a1f1c; --good: #6fcf8a; --good-soft: #1b2e21;
-    --warn: #f0b45a; --warn-soft: #33281a; --chip: #2a2a28;
+    --warn: #f0b45a; --warn-soft: #33281a; --blue: #7fb0ff; --blue-soft: #1c2738;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #121212; --surface: #1c1c1c; --text: #ececea; --muted: #9b9b96; --line: #2e2e2c;
+  --bg: #121212; --surface: #1c1c1c; --text: #ececea; --muted: #9b9b96; --line: #2e2e2c; --chip: #2a2a28;
   --accent: #ff6b5e; --accent-soft: #3a1f1c; --good: #6fcf8a; --good-soft: #1b2e21;
-  --warn: #f0b45a; --warn-soft: #33281a; --chip: #2a2a28;
+  --warn: #f0b45a; --warn-soft: #33281a; --blue: #7fb0ff; --blue-soft: #1c2738;
 }
 * { box-sizing: border-box; }
-body {
-  margin: 0; background: var(--bg); color: var(--text);
-  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Segoe UI", sans-serif;
-}
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Segoe UI", sans-serif; }
+a { color: inherit; }
 .wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px 60px; }
-header { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between; }
+header { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; margin-bottom: 18px; }
 h1 { font-size: 22px; margin: 0; letter-spacing: -0.02em; }
-h1 span { color: var(--accent); }
-.updated { color: var(--muted); font-size: 13px; }
+h1 small { font-size: 14px; color: var(--muted); font-weight: 500; margin-left: 6px; }
+h2 { font-size: 17px; margin: 28px 0 12px; }
+.muted { color: var(--muted); font-size: 13px; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.kpi b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+.kpi span { color: var(--muted); font-size: 12px; }
+.staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+.staff { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.staff.hiring { border-style: dashed; background: transparent; }
+.who { display: flex; gap: 12px; align-items: center; }
+.avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--chip); display: grid; place-items: center; font-size: 24px; flex: none; }
+.who b { font-size: 17px; }
+.who .role { color: var(--muted); font-size: 13px; }
+.pill { margin-left: auto; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.pill.ok { background: var(--good-soft); color: var(--good); }
+.pill.late { background: var(--warn-soft); color: var(--warn); }
+.pill.err { background: var(--accent-soft); color: var(--accent); }
+.pill.off { background: var(--chip); color: var(--muted); }
+.duty { font-size: 13px; color: var(--muted); margin: 0; }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.fact { background: var(--chip); border-radius: 8px; padding: 7px 10px; }
+.fact small { display: block; color: var(--muted); font-size: 11px; }
+.fact b { font-size: 14px; }
+.msg { font-size: 13px; padding: 8px 10px; border-radius: 8px; background: var(--blue-soft); color: var(--blue); }
+.msg.err { background: var(--accent-soft); color: var(--accent); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); text-decoration: none; cursor: pointer; }
+.btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+.back { display: inline-block; margin-bottom: 10px; color: var(--muted); text-decoration: none; font-size: 14px; }
+.profile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; }
+.log { width: 100%; border-collapse: collapse; font-size: 13px; }
+.log th, .log td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.log td.wrap-cell { white-space: normal; color: var(--muted); }
+.log-box { overflow-x: auto; }
 .tabs { display: flex; gap: 4px; margin: 18px 0 12px; border-bottom: 1px solid var(--line); }
-.tab {
-  background: none; border: 0; padding: 10px 14px; font: inherit; color: var(--muted); cursor: pointer;
-  border-bottom: 2px solid transparent; margin-bottom: -1px;
-}
+.tab { background: none; border: 0; padding: 10px 14px; font: inherit; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .tab.on { color: var(--text); border-color: var(--accent); font-weight: 600; }
-.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-select, input[type=search] {
-  font: inherit; font-size: 14px; color: var(--text); background: var(--surface);
-  border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-width: 0;
-}
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+select, input[type=search] { font: inherit; font-size: 14px; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-width: 0; }
 input[type=search] { flex: 1 1 180px; }
-.summary { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+label.check { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-.card {
-  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
-  display: flex; flex-direction: column;
-}
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
 .thumb { position: relative; display: block; aspect-ratio: 4 / 3; background: #000; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.rank {
-  position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,.72); color: #fff;
-  font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
-}
-.score {
-  position: absolute; top: 8px; right: 8px; background: var(--accent); color: #fff;
-  font-size: 13px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
-}
-.dur { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,.72); color: #fff; font-size: 12px; padding: 1px 6px; border-radius: 4px; }
+.badge { position: absolute; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; color: #fff; background: rgba(0,0,0,.72); }
+.badge.tl { top: 8px; left: 8px; } .badge.tr { top: 8px; right: 8px; background: var(--accent); } .badge.br { bottom: 8px; right: 8px; font-weight: 500; } .badge.bl { bottom: 8px; left: 8px; background: #1a63c9; }
 .body { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .title { font-weight: 600; font-size: 14px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.title a { color: inherit; text-decoration: none; }
-.title a:hover { text-decoration: underline; }
-.channel { color: var(--muted); font-size: 12px; }
+.title a { text-decoration: none; }
+.sub { color: var(--muted); font-size: 12px; }
+.note { font-size: 13px; line-height: 1.45; }
+.note b { color: var(--muted); font-weight: 600; font-size: 12px; margin-right: 4px; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .stat { background: var(--chip); border-radius: 8px; padding: 6px 8px; }
 .stat b { display: block; font-size: 14px; font-variant-numeric: tabular-nums; }
 .stat small { color: var(--muted); font-size: 11px; }
-.stat.hot { background: var(--accent-soft); }
-.stat.hot b { color: var(--accent); }
-.stat.buy { background: var(--good-soft); }
-.stat.buy b { color: var(--good); }
-.stat.rep { background: var(--warn-soft); }
-.stat.rep b { color: var(--warn); }
-.kw { display: flex; flex-wrap: wrap; gap: 4px; }
-.kw span { font-size: 11px; background: var(--chip); color: var(--muted); padding: 2px 7px; border-radius: 999px; }
+.stat.hot { background: var(--accent-soft); } .stat.hot b { color: var(--accent); }
+.stat.buy { background: var(--good-soft); } .stat.buy b { color: var(--good); }
+.stat.rep { background: var(--warn-soft); } .stat.rep b { color: var(--warn); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chips span { font-size: 11px; background: var(--chip); color: var(--muted); padding: 2px 7px; border-radius: 999px; }
+.chips span.prod { background: var(--blue-soft); color: var(--blue); font-weight: 600; }
 details { font-size: 12px; color: var(--muted); }
 details summary { cursor: pointer; color: var(--good); }
 details p { margin: 6px 0 0; padding: 6px 8px; background: var(--chip); border-radius: 6px; }
-.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 32px 20px; text-align: center; color: var(--muted); }
-.empty b { color: var(--text); }
+.pcard { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.pcard h3 { margin: 0; font-size: 16px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.new { font-size: 11px; background: var(--accent); color: #fff; padding: 1px 6px; border-radius: 4px; }
+.bars { display: grid; gap: 4px; }
+.bar { display: grid; grid-template-columns: 64px 1fr 22px; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+.bar i { display: block; height: 6px; border-radius: 3px; background: var(--chip); overflow: hidden; }
+.bar i em { display: block; height: 100%; background: var(--accent); }
+.bar b { color: var(--text); font-variant-numeric: tabular-nums; text-align: right; }
+.hook { background: var(--chip); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+.minis { display: flex; gap: 6px; }
+.minis a { width: 56px; aspect-ratio: 4/3; border-radius: 6px; overflow: hidden; background: #000; display: block; }
+.minis img { width: 100%; height: 100%; object-fit: cover; }
+.shop { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: auto; }
+.shop a { text-align: center; font-size: 12px; font-weight: 600; padding: 7px 0; border-radius: 8px; text-decoration: none; background: var(--chip); }
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 32px 20px; text-align: center; color: var(--muted); grid-column: 1 / -1; }
 .help { margin-top: 28px; font-size: 13px; color: var(--muted); }
 .help summary { cursor: pointer; }
-.help dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 10px 0 0; }
-.help dt { font-weight: 600; color: var(--text); }
-.help dd { margin: 0; }
-@media (max-width: 480px) { .grid { grid-template-columns: 1fr 1fr; gap: 8px; } .stats { grid-template-columns: 1fr 1fr; } .stat:nth-child(n+5) { display: none; } .body { padding: 8px; } }
+@media (max-width: 640px) {
+  .kpis { grid-template-columns: 1fr 1fr; }
+  .staff-grid { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stats { grid-template-columns: 1fr 1fr; } .stat:nth-child(n+5) { display: none; }
+  .body { padding: 8px; }
+  .shop { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>쇼츠 트렌드 <span>레이더</span></h1>
-    <div class="updated" id="updated">불러오는 중…</div>
-  </header>
-
-  <div class="tabs">
-    <button class="tab on" data-view="latest">회차별 결과</button>
-    <button class="tab" data-view="trend">반복 등장 (누적)</button>
-  </div>
-
-  <div class="controls">
-    <select id="run" aria-label="수집 회차"></select>
-    <select id="range" aria-label="누적 범위" hidden>
-      <option value="10">최근 10회 (약 하루)</option>
-      <option value="30">최근 30회 (약 3일)</option>
-      <option value="70">최근 70회 (약 1주)</option>
-    </select>
-    <select id="sort" aria-label="정렬"></select>
-    <select id="kw" aria-label="키워드"><option value="">전체 키워드</option></select>
-    <input type="search" id="q" placeholder="제목·채널 검색">
-  </div>
-
-  <div class="summary" id="summary"></div>
-  <div class="grid" id="grid"></div>
-
-  <details class="help">
-    <summary>지표 설명</summary>
-    <dl>
-      <dt>종합점수</dt><dd>시간당 조회수 40% + 아웃라이어 35% + 구매의도 댓글 25% (해당 회차 내 순위 기준, 0~100)</dd>
-      <dt>시간당 조회</dt><dd>업로드 후 지금까지 시간당 평균 조회수. 높을수록 지금 뜨는 중</dd>
-      <dt>아웃라이어</dt><dd>조회수 ÷ 구독자. 5배 이상이면 채널 힘이 아니라 제품·콘텐츠 힘으로 터진 영상</dd>
-      <dt>구매의도</dt><dd>"where to buy", "link", "need this" 등 사고 싶다는 댓글 수 (인기 댓글 50개 중)</dd>
-      <dt>반복 등장</dt><dd>여러 회차에 걸쳐 계속 상위에 잡힌 횟수. 일시적 반짝이 아닌 꾸준한 트렌드</dd>
-      <dt>증가 조회</dt><dd>처음 잡혔을 때부터 마지막 회차까지 늘어난 조회수 (실제 성장 속도)</dd>
-    </dl>
-  </details>
-</div>
+<div class="wrap" id="app"><p class="muted">불러오는 중…</p></div>
 
 <script>
-const $ = (id) => document.getElementById(id);
-const state = { view: "latest", index: [], cache: {}, rows: [] };
-
-const SORTS = {
-  latest: [["score", "종합점수순"], ["views_per_hour", "시간당 조회순"], ["outlier", "아웃라이어순"], ["buy_hits", "구매의도순"], ["views", "조회수순"], ["published", "최신 업로드순"]],
-  trend: [["appear", "반복 등장순"], ["gain", "증가 조회순"], ["best_score", "최고 점수순"], ["buy_hits", "구매의도순"], ["views", "조회수순"]],
-};
+const app = document.getElementById("app");
+const S = { cfg: null, cache: {} };
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const safeUrl = (u) => /^https:\/\//.test(u || "") ? esc(u) : "#";
 function fmt(n) {
   n = Number(n) || 0;
   if (n >= 1e8) return (n / 1e8).toFixed(1).replace(/\.0$/, "") + "억";
   if (n >= 1e4) return (n / 1e4).toFixed(n >= 1e5 ? 0 : 1).replace(/\.0$/, "") + "만";
   return n.toLocaleString("ko-KR");
 }
-const kst = (iso) => new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" });
+const kst = (iso, opt) => new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", ...(opt || { month: "numeric", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" }) });
 const ago = (iso) => {
   const h = (Date.now() - new Date(iso)) / 36e5;
   return h < 1 ? `${Math.max(1, Math.round(h * 60))}분 전` : h < 48 ? `${Math.round(h)}시간 전` : `${Math.round(h / 24)}일 전`;
 };
+const kstDay = (d) => new Date(d).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" });
+const thumb = (id) => `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
+const shortUrl = (id) => `https://www.youtube.com/shorts/${encodeURIComponent(id)}`;
 
-async function loadRun(file) {
-  if (!state.cache[file]) {
-    const res = await fetch(`data/${file}`, { cache: "no-cache" });
-    if (!res.ok) throw new Error(file);
-    state.cache[file] = await res.json();
-  }
-  return state.cache[file];
-}
-
-function setSorts() {
-  $("sort").innerHTML = SORTS[state.view].map(([v, l]) => `<option value="${v}">${l}</option>`).join("");
-}
-
-function setKeywords(rows) {
-  const cur = $("kw").value;
-  const kws = [...new Set(rows.flatMap((r) => r.keywords.split(", ").filter(Boolean)))].sort();
-  $("kw").innerHTML = `<option value="">전체 키워드</option>` + kws.map((k) => `<option${k === cur ? " selected" : ""}>${esc(k)}</option>`).join("");
-}
-
-async function refresh() {
+async function getJSON(path, fallback) {
+  if (S.cache[path]) return S.cache[path];
   try {
-    if (state.view === "latest") {
-      const run = await loadRun($("run").value);
-      state.rows = run.videos;
-      state.meta = `${kst(run.time)} 수집 · ${run.region} · 최근 ${run.days}일 업로드 · 쇼츠 ${run.videos.length}개`;
+    const res = await fetch(path, { cache: "no-cache" });
+    if (!res.ok) return fallback;
+    return (S.cache[path] = await res.json());
+  } catch { return fallback; }
+}
+
+function nextShift(st) {
+  const now = new Date();
+  for (let d = 0; d < 2; d++) for (const h of st.hours_utc) {
+    const t = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + d, h, st.minute));
+    if (t > now) return t;
+  }
+}
+function interval(st) { return (24 / st.hours_utc.length) * 36e5; }
+
+function state(st, status) {
+  if (!status) return ["off", "출근 전"];
+  if (!status.ok) return ["err", "오류"];
+  if (Date.now() - new Date(status.time) > interval(st) * 2.5) return ["late", "근무 지연"];
+  return ["ok", "정상 근무"];
+}
+
+const workflowUrl = (st) => `https://github.com/${S.cfg.repo}/actions/workflows/${st.workflow}`;
+
+// ---------------- 대시보드 ----------------
+async function dashboard() {
+  const cfg = S.cfg;
+  const info = await Promise.all(cfg.staff.map(async (st) => ({
+    st, status: await getJSON(`data/${st.id}/status.json`, null), index: await getJSON(`data/${st.id}/index.json`, []),
+  })));
+  const today = kstDay(Date.now());
+  const working = info.filter((x) => x.status && x.status.ok).length;
+  const hunter = info.find((x) => x.st.id === "video-hunter");
+  const scout = info.find((x) => x.st.id === "product-scout");
+  const latest = info.map((x) => x.status?.time).filter(Boolean).sort().pop();
+
+  app.innerHTML = `
+    <header><h1>${esc(cfg.studio)}<small>직원 관리</small></h1>
+      <div class="muted">${latest ? `마지막 보고 ${esc(kst(latest))} (${ago(latest)})` : "아직 보고가 없습니다"}</div></header>
+    <div class="kpis">
+      <div class="kpi"><b>${working} / ${cfg.staff.length}명</b><span>정상 근무 중</span></div>
+      <div class="kpi"><b>${hunter?.index.filter((e) => kstDay(e.time) === today).length ?? 0}회</b><span>오늘 헌터 근무</span></div>
+      <div class="kpi"><b>${hunter?.index[0]?.count ?? 0}개</b><span>최신 영상 보고</span></div>
+      <div class="kpi"><b>${scout?.index[0]?.count ?? 0}개 <small class="muted">(새 ${scout?.index[0]?.new ?? 0})</small></b><span>최신 제품 추천</span></div>
+    </div>
+    <h2>직원</h2>
+    <div class="staff-grid">
+      ${info.map(({ st, status, index }) => {
+        const [cls, label] = state(st, status);
+        const todayRuns = index.filter((e) => kstDay(e.time) === today).length;
+        const nx = nextShift(st);
+        return `<article class="staff">
+          <div class="who"><div class="avatar">${esc(st.emoji)}</div>
+            <div><b>${esc(st.name)}</b><div class="role">${esc(st.role)}</div></div>
+            <span class="pill ${cls}">${label}</span></div>
+          <p class="duty">${esc(st.duty)}</p>
+          <div class="facts">
+            <div class="fact"><small>마지막 근무</small><b>${status ? ago(status.time) : "-"}</b></div>
+            <div class="fact"><small>다음 근무</small><b>${nx ? esc(kst(nx.toISOString(), { hour: "2-digit", minute: "2-digit" })) : "-"}</b></div>
+            <div class="fact"><small>근무 일정</small><b>${esc(st.schedule)}</b></div>
+            <div class="fact"><small>오늘 근무</small><b>${todayRuns}회</b></div>
+          </div>
+          ${status ? `<div class="msg ${status.ok ? "" : "err"}">${esc(status.message)}${status.ai ? `<br><small>AI 판단: ${esc(status.ai)}</small>` : ""}</div>` : `<div class="msg">아직 첫 근무 전입니다. "지금 일 시키기"로 바로 시작할 수 있어요.</div>`}
+          <div class="actions">
+            <a class="btn primary" href="#${esc(st.id)}">업무 보고서</a>
+            <a class="btn" href="${workflowUrl(st)}" target="_blank" rel="noopener">지금 일 시키기 ↗</a>
+          </div>
+        </article>`;
+      }).join("")}
+      ${cfg.hiring.map((h) => `<article class="staff hiring">
+          <div class="who"><div class="avatar">${esc(h.emoji)}</div><div><b>채용 예정</b><div class="role">${esc(h.role)}</div></div>
+          <span class="pill off">공석</span></div>
+          <p class="duty">${esc(h.duty)}</p>
+        </article>`).join("")}
+    </div>
+    <details class="help"><summary>"지금 일 시키기" 사용법</summary>
+      <p>버튼을 누르면 GitHub 화면이 열립니다. 오른쪽의 <b>Run workflow</b>, 이어서 초록 <b>Run workflow</b>를 누르면 2~3분 뒤 보고서가 갱신됩니다. (GitHub 로그인 필요)</p>
+    </details>`;
+}
+
+// ---------------- 직원 상세 공통 ----------------
+async function staffHeader(st) {
+  const status = await getJSON(`data/${st.id}/status.json`, null);
+  const index = await getJSON(`data/${st.id}/index.json`, []);
+  const [cls, label] = state(st, status);
+  const html = `
+    <a class="back" href="#">← 직원 목록</a>
+    <section class="profile">
+      <div class="who"><div class="avatar">${esc(st.emoji)}</div>
+        <div><b>${esc(st.name)}</b><div class="role">${esc(st.role)} · ${esc(st.schedule)}</div></div>
+        <span class="pill ${cls}">${label}</span></div>
+      <p class="duty">${esc(st.duty)}</p>
+      ${status ? `<div class="msg ${status.ok ? "" : "err"}">${esc(kst(status.time))} · ${esc(status.message)}${status.ai ? ` · AI: ${esc(status.ai)}` : ""}</div>` : ""}
+      <details><summary>근무 일지 (최근 ${Math.min(index.length, 12)}회)</summary>
+        <div class="log-box"><table class="log"><tr><th>시각</th><th>보고</th><th>메모</th></tr>
+        ${index.slice(0, 12).map((e) => `<tr><td>${esc(kst(e.time))}</td><td>${e.count}개${e.new != null ? ` (새 ${e.new})` : ""}</td>
+          <td class="wrap-cell">${esc(e.excluded ? Object.entries(e.excluded).map(([k, v]) => `${k} ${v}`).join(" · ") : e.amazon ? `아마존 ${e.amazon}` : "")}${e.ai ? ` · AI ${esc(e.ai)}` : ""}</td></tr>`).join("")}
+        </table></div></details>
+      <div class="actions"><a class="btn" href="${workflowUrl(st)}" target="_blank" rel="noopener">지금 일 시키기 ↗</a></div>
+    </section>`;
+  return { html, index };
+}
+
+function runSelect(index) {
+  return `<select id="run" aria-label="근무 회차">${index.map((e, i) => `<option value="${esc(e.file)}">${i === 0 ? "최신 · " : ""}${esc(kst(e.time))}</option>`).join("")}</select>`;
+}
+
+// ---------------- 헌터 보고서 ----------------
+async function hunterPage(st) {
+  const { html, index } = await staffHeader(st);
+  app.innerHTML = html + `
+    <div class="tabs"><button class="tab on" data-v="run">회차별 보고</button><button class="tab" data-v="trend">반복 등장 (누적)</button></div>
+    <div class="controls">
+      ${runSelect(index)}
+      <select id="range" hidden><option value="10">최근 10회 (약 하루)</option><option value="30">최근 30회 (약 3일)</option><option value="70">최근 70회 (약 1주)</option></select>
+      <select id="sort"></select>
+      <input type="search" id="q" placeholder="제목·채널·제품 검색">
+    </div>
+    <div class="muted" id="summary"></div><br>
+    <div class="grid" id="grid"></div>`;
+  if (!index.length) { document.getElementById("grid").innerHTML = `<div class="empty">아직 보고서가 없습니다.</div>`; return; }
+
+  const SORTS = {
+    run: [["score", "종합점수순"], ["style", "스타일 일치순"], ["views_per_hour", "시간당 조회순"], ["outlier", "아웃라이어순"], ["buy_hits", "구매의도순"], ["views", "조회수순"]],
+    trend: [["appear", "반복 등장순"], ["gain", "증가 조회순"], ["style", "스타일 일치순"], ["views", "조회수순"]],
+  };
+  let view = "run", rows = [], meta = "";
+  const $ = (id) => document.getElementById(id);
+  const setSorts = () => { $("sort").innerHTML = SORTS[view].map(([v, l]) => `<option value="${v}">${l}</option>`).join(""); };
+
+  async function load() {
+    if (view === "run") {
+      const run = await getJSON(`data/${st.id}/${$("run").value}`, { videos: [] });
+      rows = run.videos;
+      meta = `${kst(run.time)} 보고 · 최근 ${run.days}일 업로드 · ${rows.length}개` + (run.excluded ? ` · 걸러냄: ${Object.entries(run.excluded).filter(([k]) => k !== "수집").map(([k, v]) => `${k} ${v}`).join(", ")} (수집 ${run.excluded["수집"]})` : "");
     } else {
-      const files = state.index.slice(0, Number($("range").value));
-      $("summary").textContent = `${files.length}회차 불러오는 중…`;
-      const runs = await Promise.all(files.map((e) => loadRun(e.file).catch(() => null)));
-      state.rows = aggregate(runs.filter(Boolean));
-      state.meta = `최근 ${files.length}회차 합산 · 고유 영상 ${state.rows.length}개`;
-    }
-    setKeywords(state.rows);
-    render();
-  } catch (e) {
-    $("summary").textContent = "데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.";
-  }
-}
-
-function aggregate(runs) {
-  const map = new Map();
-  // runs는 최신순 → 오래된 것부터 순회
-  for (const run of [...runs].reverse()) {
-    for (const v of run.videos) {
-      const a = map.get(v.video_id);
-      if (!a) {
-        map.set(v.video_id, { ...v, appear: 1, first_views: v.views, first_seen: run.time, last_seen: run.time, best_score: v.score });
-      } else {
-        Object.assign(a, v, { appear: a.appear + 1, last_seen: run.time, best_score: Math.max(a.best_score, v.score) });
+      const files = index.slice(0, Number($("range").value));
+      const runs = (await Promise.all(files.map((e) => getJSON(`data/${st.id}/${e.file}`, null)))).filter(Boolean);
+      const map = new Map();
+      for (const run of [...runs].reverse()) for (const v of run.videos) {
+        const a = map.get(v.video_id);
+        if (!a) map.set(v.video_id, { ...v, appear: 1, first_views: v.views });
+        else Object.assign(a, v, { appear: a.appear + 1, first_views: a.first_views });
       }
+      rows = [...map.values()].map((a) => ({ ...a, gain: Math.max(0, a.views - a.first_views) }));
+      meta = `최근 ${runs.length}회 근무 합산 · 고유 영상 ${rows.length}개`;
     }
+    render();
   }
-  return [...map.values()].map((a) => ({ ...a, gain: Math.max(0, a.views - a.first_views) }));
-}
 
-function render() {
-  const sort = $("sort").value, kw = $("kw").value, q = $("q").value.trim().toLowerCase();
-  let rows = state.rows.filter((r) =>
-    (!kw || r.keywords.split(", ").includes(kw)) &&
-    (!q || (r.title + " " + r.channel).toLowerCase().includes(q)));
-  rows = [...rows].sort((a, b) => sort === "published" ? b.published.localeCompare(a.published) : (b[sort] ?? 0) - (a[sort] ?? 0));
-  $("summary").textContent = state.meta + (rows.length !== state.rows.length ? ` · 필터 결과 ${rows.length}개` : "");
-  if (!rows.length) {
-    $("grid").innerHTML = `<div class="empty">조건에 맞는 영상이 없습니다.</div>`;
-    return;
+  function render() {
+    const sort = $("sort").value, q = $("q").value.trim().toLowerCase();
+    let list = rows.filter((r) => !q || `${r.title} ${r.channel} ${r.product_en} ${r.product_ko}`.toLowerCase().includes(q));
+    list = [...list].sort((a, b) => (b[sort] ?? 0) - (a[sort] ?? 0));
+    $("summary").textContent = meta + (list.length !== rows.length ? ` · 검색 결과 ${list.length}개` : "");
+    const trend = view === "trend";
+    $("grid").innerHTML = list.length ? list.map((r, i) => {
+      const stats = trend ? [["rep", r.appear + "회", "반복 등장"], ["hot", "+" + fmt(r.gain), "증가 조회"], ["", fmt(r.views), "현재 조회"], ["", "x" + r.outlier, "아웃라이어"]]
+        : [["hot", fmt(r.views_per_hour), "시간당 조회"], [r.outlier >= 5 ? "hot" : "", "x" + r.outlier, "아웃라이어"], [r.buy_hits >= 3 ? "buy" : "", r.buy_hits, "구매의도 댓글"],
+           ["", fmt(r.views), "조회수"], ["", fmt(r.subs), "구독자"], ["", r.like_rate + "%", "좋아요율"]];
+      return `<article class="card">
+        <a class="thumb" href="${shortUrl(r.video_id)}" target="_blank" rel="noopener">
+          <img loading="lazy" src="${thumb(r.video_id)}" alt="" onerror="this.style.visibility='hidden'">
+          <span class="badge tl">#${i + 1}</span><span class="badge tr">${trend ? r.appear + "회" : r.score}</span>
+          <span class="badge bl">스타일 ${r.style}/10</span><span class="badge br">${r.seconds}초</span></a>
+        <div class="body">
+          <div class="title"><a href="${shortUrl(r.video_id)}" target="_blank" rel="noopener">${esc(r.title)}</a></div>
+          <div class="sub">${esc(r.channel)}${r.country ? ` · ${esc(r.country)}` : ""} · ${ago(r.published.replace(" ", "T") + "Z")} 업로드</div>
+          ${r.summary_ko ? `<div class="note"><b>내용</b>${esc(r.summary_ko)}</div>` : ""}
+          ${r.fun_ko ? `<div class="note"><b>포인트</b>${esc(r.fun_ko)}</div>` : ""}
+          <div class="stats">${stats.map(([c, b, s]) => `<div class="stat ${c}"><b>${esc(b)}</b><small>${s}</small></div>`).join("")}</div>
+          <div class="chips">${r.product_ko || r.product_en ? `<span class="prod">${esc(r.product_ko || r.product_en)}</span>` : ""}${r.keywords.split(", ").map((k) => `<span>${esc(k)}</span>`).join("")}</div>
+          ${r.buy_examples ? `<details><summary>구매의도 댓글 보기</summary>${r.buy_examples.split(" | ").map((t) => `<p>${esc(t)}</p>`).join("")}</details>` : ""}
+        </div></article>`;
+    }).join("") : `<div class="empty">조건에 맞는 영상이 없습니다.</div>`;
   }
-  const trend = state.view === "trend";
-  $("grid").innerHTML = rows.map((r, i) => {
-    const url = `https://www.youtube.com/shorts/${encodeURIComponent(r.video_id)}`;
-    const stats = trend ? [
-      ["rep", r.appear + "회", "반복 등장"],
-      ["hot", "+" + fmt(r.gain), "증가 조회"],
-      ["", fmt(r.views), "현재 조회"],
-      ["", "x" + r.outlier, "아웃라이어"],
-      ["buy", r.buy_hits, "구매의도"],
-      ["", r.best_score, "최고 점수"],
-    ] : [
-      ["hot", fmt(r.views_per_hour), "시간당 조회"],
-      [r.outlier >= 5 ? "hot" : "", "x" + r.outlier, "아웃라이어"],
-      [r.buy_hits >= 3 ? "buy" : "", r.buy_hits, "구매의도"],
-      ["", fmt(r.views), "조회수"],
-      ["", fmt(r.subs), "구독자"],
-      ["", r.engagement + "%", "참여율"],
-    ];
-    return `<article class="card">
-      <a class="thumb" href="${url}" target="_blank" rel="noopener">
-        <img loading="lazy" src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/hqdefault.jpg" alt="" onerror="this.style.visibility='hidden'">
-        <span class="rank">#${i + 1}</span>
-        <span class="score">${trend ? r.appear + "회" : r.score}</span>
-        <span class="dur">${r.seconds}초</span>
-      </a>
-      <div class="body">
-        <div class="title"><a href="${url}" target="_blank" rel="noopener">${esc(r.title)}</a></div>
-        <div class="channel">${esc(r.channel)} · ${ago(r.published.replace(" ", "T") + "Z")} 업로드</div>
-        <div class="stats">${stats.map(([c, b, s]) => `<div class="stat ${c}"><b>${esc(b)}</b><small>${s}</small></div>`).join("")}</div>
-        <div class="kw">${r.keywords.split(", ").map((k) => `<span>${esc(k)}</span>`).join("")}</div>
-        ${r.buy_examples ? `<details><summary>구매의도 댓글 보기</summary>${r.buy_examples.split(" | ").map((t) => `<p>${esc(t)}</p>`).join("")}</details>` : ""}
-      </div>
-    </article>`;
-  }).join("");
-}
 
-async function init() {
   setSorts();
-  try {
-    const res = await fetch("data/index.json", { cache: "no-cache" });
-    state.index = res.ok ? await res.json() : [];
-  } catch { state.index = []; }
-
-  if (!state.index.length) {
-    $("updated").textContent = "";
-    $("grid").innerHTML = `<div class="empty"><b>아직 수집된 데이터가 없습니다.</b><br>GitHub 저장소의 Actions 탭에서 "Run workflow"를 눌러 첫 수집을 실행하세요.<br>1~2분 뒤 새로고침하면 결과가 보입니다.</div>`;
-    return;
-  }
-  $("updated").textContent = `마지막 업데이트: ${kst(state.index[0].time)} (${ago(state.index[0].time)})`;
-  $("run").innerHTML = state.index.map((e, i) => `<option value="${esc(e.file)}">${i === 0 ? "최신 · " : ""}${kst(e.time)}</option>`).join("");
-
-  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach((t) => t.onclick = () => {
     document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("on", x === t));
-    state.view = t.dataset.view;
-    $("run").hidden = state.view !== "latest";
-    $("range").hidden = state.view !== "trend";
-    setSorts();
-    refresh();
-  }));
-  $("run").addEventListener("change", refresh);
-  $("range").addEventListener("change", refresh);
-  ["sort", "kw"].forEach((id) => $(id).addEventListener("change", render));
-  $("q").addEventListener("input", render);
-  refresh();
+    view = t.dataset.v; $("run").hidden = view !== "run"; $("range").hidden = view !== "trend"; setSorts(); load();
+  });
+  $("run").onchange = load; $("range").onchange = load; $("sort").onchange = render; $("q").oninput = render;
+  load();
 }
-init();
+
+// ---------------- 스카우터 보고서 ----------------
+async function scoutPage(st) {
+  const { html, index } = await staffHeader(st);
+  app.innerHTML = html + `
+    <div class="controls">
+      ${runSelect(index)}
+      <select id="sort"><option value="score">종합순</option><option value="novelty">신박함순</option><option value="fun">재미순</option><option value="review_fit">리뷰 적합순</option><option value="buy_hits">구매의도순</option></select>
+      <label class="check"><input type="checkbox" id="onlyNew"> 새 제품만</label>
+    </div>
+    <div class="muted" id="summary"></div><br>
+    <div class="grid" id="grid"></div>`;
+  if (!index.length) { document.getElementById("grid").innerHTML = `<div class="empty">아직 보고서가 없습니다.</div>`; return; }
+  const $ = (id) => document.getElementById(id);
+  let run;
+  async function load() { run = await getJSON(`data/${st.id}/${$("run").value}`, { products: [] }); render(); }
+  function render() {
+    const sort = $("sort").value;
+    let list = run.products.filter((p) => !$("onlyNew").checked || p.new);
+    list = [...list].sort((a, b) => (b[sort] ?? 0) - (a[sort] ?? 0));
+    $("summary").textContent = `${kst(run.time)} 보고 · 제품 ${run.products.length}개 (새 제품 ${run.new}) · 아마존 ${run.amazon} · AI ${run.ai}`;
+    const bar = (label, v) => `<div class="bar">${label}<i><em style="width:${v * 10}%"></em></i><b>${v}</b></div>`;
+    $("grid").innerHTML = list.length ? list.map((p) => `<article class="pcard">
+        <h3>${esc(p.name_ko || p.name_en)}${p.new ? `<span class="new">NEW</span>` : ""}</h3>
+        <div class="sub">${p.name_ko ? esc(p.name_en) + " · " : ""}${esc(p.from)}${p.buy_hits ? ` · 구매의도 댓글 ${p.buy_hits}` : ""}</div>
+        ${p.ai ? `<div class="bars">${bar("신박함", p.novelty)}${bar("재미", p.fun)}${bar("리뷰 적합", p.review_fit)}</div>` : `<div class="sub">AI 평가 없음 · 스타일 ${p.review_fit}/10</div>`}
+        ${p.why_ko ? `<div class="note"><b>왜</b>${esc(p.why_ko)}</div>` : ""}
+        ${p.hook_ko || p.test_ko ? `<div class="hook">${p.hook_ko ? `🎬 <b>${esc(p.hook_ko)}</b>` : ""}${p.hook_ko && p.test_ko ? "<br>" : ""}${p.test_ko ? `📷 ${esc(p.test_ko)}` : ""}</div>` : ""}
+        ${p.videos?.length ? `<div class="minis">${p.videos.map((v) => `<a href="${shortUrl(v.video_id)}" target="_blank" rel="noopener" title="${esc(v.title)} · ${fmt(v.views)}회"><img loading="lazy" src="${thumb(v.video_id)}" alt="" onerror="this.style.visibility='hidden'"></a>`).join("")}<span class="sub">원본 영상 ${p.videos.length}개 · 최고 ${fmt(Math.max(...p.videos.map((v) => v.views)))}회</span></div>` : ""}
+        <div class="shop">
+          <a href="${safeUrl(p.links.coupang)}" target="_blank" rel="noopener">쿠팡</a>
+          <a href="${safeUrl(p.links.amazon)}" target="_blank" rel="noopener">아마존</a>
+          <a href="${safeUrl(p.links.temu)}" target="_blank" rel="noopener">테무</a>
+          <a href="${safeUrl(p.links.aliexpress)}" target="_blank" rel="noopener">알리</a>
+        </div>
+      </article>`).join("") : `<div class="empty">조건에 맞는 제품이 없습니다.</div>`;
+  }
+  $("run").onchange = load; $("sort").onchange = render; $("onlyNew").onchange = render;
+  load();
+}
+
+async function route() {
+  S.cache = {};
+  if (!S.cfg) S.cfg = await getJSON("data/staff.json", null);
+  if (!S.cfg) { app.innerHTML = `<div class="empty">설정 파일(data/staff.json)을 불러오지 못했습니다.</div>`; return; }
+  const id = location.hash.slice(1);
+  const st = S.cfg.staff.find((s) => s.id === id);
+  window.scrollTo(0, 0);
+  if (!st) return dashboard();
+  if (st.report === "videos") return hunterPage(st);
+  if (st.report === "products") return scoutPage(st);
+}
+window.addEventListener("hashchange", route);
+route();
 </script>
 </body>
 </html>

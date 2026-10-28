@@ -1,0 +1,11 @@
+# 헌터(해외 영상 소스 담당)가 검색할 키워드. 한 줄에 하나.
+# 리뷰하는회사원·소개팁처럼 "제품을 직접 써보고 반응/반전이 있는" 영상을 겨냥한 영어 키워드
+# 키워드 1개 = YouTube 할당량 100. 하루 10회 기준 8개가 한도에 맞음
+testing viral products
+does it actually work
+weird gadgets
+amazon gadgets
+kitchen gadgets test
+tiktok made me buy it
+cheap vs expensive
+japanese gadgets
