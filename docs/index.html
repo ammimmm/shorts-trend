@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>쇼츠 트렌드 레이더</title>
+<style>
+:root {
+  --bg: #f6f6f4; --surface: #ffffff; --text: #1b1b1a; --muted: #6b6b66; --line: #e4e4df;
+  --accent: #d93025; --accent-soft: #fde8e6; --good: #137333; --good-soft: #e6f4ea;
+  --warn: #b06000; --warn-soft: #fef3e0; --chip: #efefeb;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121212; --surface: #1c1c1c; --text: #ececea; --muted: #9b9b96; --line: #2e2e2c;
+    --accent: #ff6b5e; --accent-soft: #3a1f1c; --good: #6fcf8a; --good-soft: #1b2e21;
+    --warn: #f0b45a; --warn-soft: #33281a; --chip: #2a2a28;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121212; --surface: #1c1c1c; --text: #ececea; --muted: #9b9b96; --line: #2e2e2c;
+  --accent: #ff6b5e; --accent-soft: #3a1f1c; --good: #6fcf8a; --good-soft: #1b2e21;
+  --warn: #f0b45a; --warn-soft: #33281a; --chip: #2a2a28;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Segoe UI", sans-serif;
+}
+.wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px 60px; }
+header { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between; }
+h1 { font-size: 22px; margin: 0; letter-spacing: -0.02em; }
+h1 span { color: var(--accent); }
+.updated { color: var(--muted); font-size: 13px; }
+.tabs { display: flex; gap: 4px; margin: 18px 0 12px; border-bottom: 1px solid var(--line); }
+.tab {
+  background: none; border: 0; padding: 10px 14px; font: inherit; color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tab.on { color: var(--text); border-color: var(--accent); font-weight: 600; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+select, input[type=search] {
+  font: inherit; font-size: 14px; color: var(--text); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-width: 0;
+}
+input[type=search] { flex: 1 1 180px; }
+.summary { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.thumb { position: relative; display: block; aspect-ratio: 4 / 3; background: #000; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rank {
+  position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,.72); color: #fff;
+  font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+}
+.score {
+  position: absolute; top: 8px; right: 8px; background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+}
+.dur { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,.72); color: #fff; font-size: 12px; padding: 1px 6px; border-radius: 4px; }
+.body { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.title { font-weight: 600; font-size: 14px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.title a { color: inherit; text-decoration: none; }
+.title a:hover { text-decoration: underline; }
+.channel { color: var(--muted); font-size: 12px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.stat { background: var(--chip); border-radius: 8px; padding: 6px 8px; }
+.stat b { display: block; font-size: 14px; font-variant-numeric: tabular-nums; }
+.stat small { color: var(--muted); font-size: 11px; }
+.stat.hot { background: var(--accent-soft); }
+.stat.hot b { color: var(--accent); }
+.stat.buy { background: var(--good-soft); }
+.stat.buy b { color: var(--good); }
+.stat.rep { background: var(--warn-soft); }
+.stat.rep b { color: var(--warn); }
+.kw { display: flex; flex-wrap: wrap; gap: 4px; }
+.kw span { font-size: 11px; background: var(--chip); color: var(--muted); padding: 2px 7px; border-radius: 999px; }
+details { font-size: 12px; color: var(--muted); }
+details summary { cursor: pointer; color: var(--good); }
+details p { margin: 6px 0 0; padding: 6px 8px; background: var(--chip); border-radius: 6px; }
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 32px 20px; text-align: center; color: var(--muted); }
+.empty b { color: var(--text); }
+.help { margin-top: 28px; font-size: 13px; color: var(--muted); }
+.help summary { cursor: pointer; }
+.help dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 10px 0 0; }
+.help dt { font-weight: 600; color: var(--text); }
+.help dd { margin: 0; }
+@media (max-width: 480px) { .grid { grid-template-columns: 1fr 1fr; gap: 8px; } .stats { grid-template-columns: 1fr 1fr; } .stat:nth-child(n+5) { display: none; } .body { padding: 8px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>쇼츠 트렌드 <span>레이더</span></h1>
+    <div class="updated" id="updated">불러오는 중…</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab on" data-view="latest">회차별 결과</button>
+    <button class="tab" data-view="trend">반복 등장 (누적)</button>
+  </div>
+
+  <div class="controls">
+    <select id="run" aria-label="수집 회차"></select>
+    <select id="range" aria-label="누적 범위" hidden>
+      <option value="10">최근 10회 (약 하루)</option>
+      <option value="30">최근 30회 (약 3일)</option>
+      <option value="70">최근 70회 (약 1주)</option>
+    </select>
+    <select id="sort" aria-label="정렬"></select>
+    <select id="kw" aria-label="키워드"><option value="">전체 키워드</option></select>
+    <input type="search" id="q" placeholder="제목·채널 검색">
+  </div>
+
+  <div class="summary" id="summary"></div>
+  <div class="grid" id="grid"></div>
+
+  <details class="help">
+    <summary>지표 설명</summary>
+    <dl>
+      <dt>종합점수</dt><dd>시간당 조회수 40% + 아웃라이어 35% + 구매의도 댓글 25% (해당 회차 내 순위 기준, 0~100)</dd>
+      <dt>시간당 조회</dt><dd>업로드 후 지금까지 시간당 평균 조회수. 높을수록 지금 뜨는 중</dd>
+      <dt>아웃라이어</dt><dd>조회수 ÷ 구독자. 5배 이상이면 채널 힘이 아니라 제품·콘텐츠 힘으로 터진 영상</dd>
+      <dt>구매의도</dt><dd>"where to buy", "link", "need this" 등 사고 싶다는 댓글 수 (인기 댓글 50개 중)</dd>
+      <dt>반복 등장</dt><dd>여러 회차에 걸쳐 계속 상위에 잡힌 횟수. 일시적 반짝이 아닌 꾸준한 트렌드</dd>
+      <dt>증가 조회</dt><dd>처음 잡혔을 때부터 마지막 회차까지 늘어난 조회수 (실제 성장 속도)</dd>
+    </dl>
+  </details>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { view: "latest", index: [], cache: {}, rows: [] };
+
+const SORTS = {
+  latest: [["score", "종합점수순"], ["views_per_hour", "시간당 조회순"], ["outlier", "아웃라이어순"], ["buy_hits", "구매의도순"], ["views", "조회수순"], ["published", "최신 업로드순"]],
+  trend: [["appear", "반복 등장순"], ["gain", "증가 조회순"], ["best_score", "최고 점수순"], ["buy_hits", "구매의도순"], ["views", "조회수순"]],
+};
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function fmt(n) {
+  n = Number(n) || 0;
+  if (n >= 1e8) return (n / 1e8).toFixed(1).replace(/\.0$/, "") + "억";
+  if (n >= 1e4) return (n / 1e4).toFixed(n >= 1e5 ? 0 : 1).replace(/\.0$/, "") + "만";
+  return n.toLocaleString("ko-KR");
+}
+const kst = (iso) => new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" });
+const ago = (iso) => {
+  const h = (Date.now() - new Date(iso)) / 36e5;
+  return h < 1 ? `${Math.max(1, Math.round(h * 60))}분 전` : h < 48 ? `${Math.round(h)}시간 전` : `${Math.round(h / 24)}일 전`;
+};
+
+async function loadRun(file) {
+  if (!state.cache[file]) {
+    const res = await fetch(`data/${file}`, { cache: "no-cache" });
+    if (!res.ok) throw new Error(file);
+    state.cache[file] = await res.json();
+  }
+  return state.cache[file];
+}
+
+function setSorts() {
+  $("sort").innerHTML = SORTS[state.view].map(([v, l]) => `<option value="${v}">${l}</option>`).join("");
+}
+
+function setKeywords(rows) {
+  const cur = $("kw").value;
+  const kws = [...new Set(rows.flatMap((r) => r.keywords.split(", ").filter(Boolean)))].sort();
+  $("kw").innerHTML = `<option value="">전체 키워드</option>` + kws.map((k) => `<option${k === cur ? " selected" : ""}>${esc(k)}</option>`).join("");
+}
+
+async function refresh() {
+  try {
+    if (state.view === "latest") {
+      const run = await loadRun($("run").value);
+      state.rows = run.videos;
+      state.meta = `${kst(run.time)} 수집 · ${run.region} · 최근 ${run.days}일 업로드 · 쇼츠 ${run.videos.length}개`;
+    } else {
+      const files = state.index.slice(0, Number($("range").value));
+      $("summary").textContent = `${files.length}회차 불러오는 중…`;
+      const runs = await Promise.all(files.map((e) => loadRun(e.file).catch(() => null)));
+      state.rows = aggregate(runs.filter(Boolean));
+      state.meta = `최근 ${files.length}회차 합산 · 고유 영상 ${state.rows.length}개`;
+    }
+    setKeywords(state.rows);
+    render();
+  } catch (e) {
+    $("summary").textContent = "데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.";
+  }
+}
+
+function aggregate(runs) {
+  const map = new Map();
+  // runs는 최신순 → 오래된 것부터 순회
+  for (const run of [...runs].reverse()) {
+    for (const v of run.videos) {
+      const a = map.get(v.video_id);
+      if (!a) {
+        map.set(v.video_id, { ...v, appear: 1, first_views: v.views, first_seen: run.time, last_seen: run.time, best_score: v.score });
+      } else {
+        Object.assign(a, v, { appear: a.appear + 1, last_seen: run.time, best_score: Math.max(a.best_score, v.score) });
+      }
+    }
+  }
+  return [...map.values()].map((a) => ({ ...a, gain: Math.max(0, a.views - a.first_views) }));
+}
+
+function render() {
+  const sort = $("sort").value, kw = $("kw").value, q = $("q").value.trim().toLowerCase();
+  let rows = state.rows.filter((r) =>
+    (!kw || r.keywords.split(", ").includes(kw)) &&
+    (!q || (r.title + " " + r.channel).toLowerCase().includes(q)));
+  rows = [...rows].sort((a, b) => sort === "published" ? b.published.localeCompare(a.published) : (b[sort] ?? 0) - (a[sort] ?? 0));
+  $("summary").textContent = state.meta + (rows.length !== state.rows.length ? ` · 필터 결과 ${rows.length}개` : "");
+  if (!rows.length) {
+    $("grid").innerHTML = `<div class="empty">조건에 맞는 영상이 없습니다.</div>`;
+    return;
+  }
+  const trend = state.view === "trend";
+  $("grid").innerHTML = rows.map((r, i) => {
+    const url = `https://www.youtube.com/shorts/${encodeURIComponent(r.video_id)}`;
+    const stats = trend ? [
+      ["rep", r.appear + "회", "반복 등장"],
+      ["hot", "+" + fmt(r.gain), "증가 조회"],
+      ["", fmt(r.views), "현재 조회"],
+      ["", "x" + r.outlier, "아웃라이어"],
+      ["buy", r.buy_hits, "구매의도"],
+      ["", r.best_score, "최고 점수"],
+    ] : [
+      ["hot", fmt(r.views_per_hour), "시간당 조회"],
+      [r.outlier >= 5 ? "hot" : "", "x" + r.outlier, "아웃라이어"],
+      [r.buy_hits >= 3 ? "buy" : "", r.buy_hits, "구매의도"],
+      ["", fmt(r.views), "조회수"],
+      ["", fmt(r.subs), "구독자"],
+      ["", r.engagement + "%", "참여율"],
+    ];
+    return `<article class="card">
+      <a class="thumb" href="${url}" target="_blank" rel="noopener">
+        <img loading="lazy" src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/hqdefault.jpg" alt="" onerror="this.style.visibility='hidden'">
+        <span class="rank">#${i + 1}</span>
+        <span class="score">${trend ? r.appear + "회" : r.score}</span>
+        <span class="dur">${r.seconds}초</span>
+      </a>
+      <div class="body">
+        <div class="title"><a href="${url}" target="_blank" rel="noopener">${esc(r.title)}</a></div>
+        <div class="channel">${esc(r.channel)} · ${ago(r.published.replace(" ", "T") + "Z")} 업로드</div>
+        <div class="stats">${stats.map(([c, b, s]) => `<div class="stat ${c}"><b>${esc(b)}</b><small>${s}</small></div>`).join("")}</div>
+        <div class="kw">${r.keywords.split(", ").map((k) => `<span>${esc(k)}</span>`).join("")}</div>
+        ${r.buy_examples ? `<details><summary>구매의도 댓글 보기</summary>${r.buy_examples.split(" | ").map((t) => `<p>${esc(t)}</p>`).join("")}</details>` : ""}
+      </div>
+    </article>`;
+  }).join("");
+}
+
+async function init() {
+  setSorts();
+  try {
+    const res = await fetch("data/index.json", { cache: "no-cache" });
+    state.index = res.ok ? await res.json() : [];
+  } catch { state.index = []; }
+
+  if (!state.index.length) {
+    $("updated").textContent = "";
+    $("grid").innerHTML = `<div class="empty"><b>아직 수집된 데이터가 없습니다.</b><br>GitHub 저장소의 Actions 탭에서 "Run workflow"를 눌러 첫 수집을 실행하세요.<br>1~2분 뒤 새로고침하면 결과가 보입니다.</div>`;
+    return;
+  }
+  $("updated").textContent = `마지막 업데이트: ${kst(state.index[0].time)} (${ago(state.index[0].time)})`;
+  $("run").innerHTML = state.index.map((e, i) => `<option value="${esc(e.file)}">${i === 0 ? "최신 · " : ""}${kst(e.time)}</option>`).join("");
+
+  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("on", x === t));
+    state.view = t.dataset.view;
+    $("run").hidden = state.view !== "latest";
+    $("range").hidden = state.view !== "trend";
+    setSorts();
+    refresh();
+  }));
+  $("run").addEventListener("change", refresh);
+  $("range").addEventListener("change", refresh);
+  ["sort", "kw"].forEach((id) => $(id).addEventListener("change", render));
+  $("q").addEventListener("input", render);
+  refresh();
+}
+init();
+</script>
+</body>
+</html>
