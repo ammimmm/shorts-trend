@@ -106,7 +106,12 @@ class AI:
             self.calls += 1
             if resp.status_code != 200:
                 raise RuntimeError(f"HTTP {resp.status_code}: {resp.text[:200]}")
-            text = resp.json()["choices"][0]["message"]["content"]
+            try:
+                text = resp.json()["choices"][0]["message"]["content"] or ""
+            except (ValueError, KeyError, IndexError, TypeError):
+                raise RuntimeError(f"응답 형식 이상 ({resp.headers.get('content-type')}): {resp.text[:200]!r}")
+            if "{" not in text:
+                raise RuntimeError(f"JSON 없는 답변: {text[:200]!r}")
             return json.loads(text[text.find("{"):text.rfind("}") + 1])
         except Exception as e:  # AI가 안 돼도 직원은 규칙으로 계속 일함
             self.errors.append(str(e)[:200])

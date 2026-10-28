@@ -3,33 +3,20 @@
 
 재료
 1) 헌터가 최근 하루 동안 찾은 해외 히트 영상 속 제품 (조회수·구매의도 댓글 포함)
-2) 아마존 Movers & Shakers(급상승 상품) — 아마존이 봇 접속을 막으면 건너뜀
 판단
 - 무료 AI(GitHub Models)가 신박함·재미·리뷰 적합도를 평가하고 쇼츠 제목·촬영 아이디어를 제안
 - AI가 안 되면 영상 데이터만으로 순위를 매김
 """
 import argparse
-import html
 import json
 import re
 from datetime import datetime, timedelta
 from urllib.parse import quote_plus
 
-import requests
 
 from common import AI, CONFIG, DATA, load_json, now_utc, run_staff, save_json, save_report
 
 STAFF_ID = "product-scout"
-AMAZON_CATEGORIES = {
-    "주방": "https://www.amazon.com/gp/movers-and-shakers/kitchen",
-    "생활·집": "https://www.amazon.com/gp/movers-and-shakers/home-garden",
-    "장난감": "https://www.amazon.com/gp/movers-and-shakers/toys-and-games",
-    "뷰티": "https://www.amazon.com/gp/movers-and-shakers/beauty",
-}
-BROWSER_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
-    "Accept-Language": "en-US,en;q=0.9",
-}
 
 
 def links(ko, en):
@@ -68,25 +55,6 @@ def hunter_products(hours):
     return sorted(out, key=lambda g: (-(g["style"] >= 6), -g["best_views"]))
 
 
-def amazon_movers():
-    """아마존 급상승 상품 제목. 아마존은 서버 접속을 자주 막기 때문에 실패해도 정상 진행."""
-    items, notes = [], []
-    for cat, url in AMAZON_CATEGORIES.items():
-        try:
-            resp = requests.get(url, headers=BROWSER_HEADERS, timeout=20)
-            if resp.status_code != 200 or "captcha" in resp.text.lower()[:5000]:
-                notes.append(f"{cat}: 차단({resp.status_code})")
-                continue
-            titles = re.findall(r'<div class="_cDEzb_p13n-sc-css-line-clamp-\d+_[^"]*">([^<]{8,200})</div>', resp.text)
-            if not titles:
-                titles = re.findall(r'alt="([^"]{15,200})"', resp.text)
-            titles = list(dict.fromkeys(html.unescape(t).strip() for t in titles))[:20]
-            items += [{"title": t, "category": cat} for t in titles]
-            notes.append(f"{cat}: {len(titles)}개")
-        except requests.RequestException as e:
-            notes.append(f"{cat}: 실패({type(e).__name__})")
-    return items, ", ".join(notes)
-
 
 AI_SYSTEM = """너는 한국 쇼츠 리뷰 채널(리뷰하는회사원·소개팁 스타일)의 제품 발굴 담당이야.
 후보 목록에서 한국 시청자가 "이게 뭐야?" 하고 끝까지 보게 될, 직접 써보며 리뷰하기 좋은 제품을 골라.
@@ -111,7 +79,7 @@ def work(args):
     ai = AI()
     t = now_utc()
     candidates = hunter_products(args.hours)
-    amazon, amazon_note = amazon_movers() if not args.no_amazon else ([], "건너뜀")
+    amazon, amazon_note = [], "사용 안 함"
     print(f"영상 제품 후보 {len(candidates)}개, 아마존 {len(amazon)}개 ({amazon_note})")
     if not candidates and not amazon:
         raise RuntimeError("후보가 없습니다. 헌터 보고서가 아직 없거나 아마존 접속이 막혔습니다.")
@@ -168,7 +136,6 @@ if __name__ == "__main__":
     p.add_argument("--hours", type=int, default=24, help="헌터 보고서를 몇 시간치 볼지")
     p.add_argument("--video-candidates", type=int, default=40)
     p.add_argument("--amazon-candidates", type=int, default=40)
-    p.add_argument("--no-amazon", action="store_true", help="아마존 확인 건너뛰기")
     p.add_argument("--keep", type=int, default=30, help="보관할 근무 기록 수")
     a = p.parse_args()
     run_staff(STAFF_ID, lambda: work(a))
