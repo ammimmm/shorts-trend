@@ -1,6 +1,0 @@
-{
- "catalog": "HTTP/2 200 \ncontent-type: text/plain\n\nOK\n",
- "chat": "HTTP/2 200 \ncontent-type: text/plain\n\nOK\n",
- "chat_no_token": "HTTP/2 200 \ncontent-type: text/plain\n\nOK\n",
- "dns": "140.82.113.21   glb-db52c2cf8be544.github.com models.github.ai\n"
-}

@@ -1,11 +1,33 @@
-# 헌터(해외 영상 소스 담당)가 검색할 키워드. 한 줄에 하나.
-# 리뷰하는회사원·소개팁처럼 "제품을 직접 써보고 반응/반전이 있는" 영상을 겨냥한 영어 키워드
-# 키워드 1개 = YouTube 할당량 100. 하루 10회 기준 8개가 한도에 맞음
-testing viral products
-does it actually work
-weird gadgets
-amazon gadgets
-kitchen gadgets test
-tiktok made me buy it
-cheap vs expensive
-japanese gadgets
+# 헌터(해외 영상 소스 담당) 검색 키워드. 형식: 분야 | 키워드
+# 분야: us_shorts(미국 쇼츠) / jp_shorts(일본 쇼츠) / us_review(미국 실사용 리뷰) / jp_review(일본 실사용 리뷰)
+# 근무할 때마다 분야별로 몇 개씩 돌아가며 검색합니다 (검색 1회 = 할당량 100)
+
+us_shorts | testing viral products
+us_shorts | does it actually work
+us_shorts | weird gadgets
+us_shorts | amazon gadgets
+us_shorts | kitchen gadgets test
+us_shorts | tiktok made me buy it
+us_shorts | cheap vs expensive
+us_shorts | gadgets that actually work
+
+jp_shorts | 便利グッズ
+jp_shorts | 買ってよかった
+jp_shorts | 100均 検証
+jp_shorts | 神アイテム
+jp_shorts | 使ってみた
+jp_shorts | キッチングッズ 便利
+jp_shorts | ダイソー 便利グッズ
+jp_shorts | 便利すぎる
+
+us_review | honest review after using
+us_review | i tested it for a week
+us_review | is it worth it review
+us_review | tested for 30 days
+us_review | i tried every viral gadget
+
+jp_review | 使ってみた レビュー
+jp_review | 正直レビュー
+jp_review | 本音レビュー
+jp_review | 検証してみた 商品
+jp_review | 買ってよかったもの レビュー

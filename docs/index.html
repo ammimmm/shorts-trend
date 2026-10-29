@@ -384,6 +384,8 @@ async function hunterPage(st) {
       ${runSelect(index)}
       <select id="range" hidden><option value="10">최근 10회 (약 하루)</option><option value="30">최근 30회 (약 3일)</option><option value="70">최근 70회 (약 1주)</option></select>
       <select id="sort"></select>
+      <select id="cat"><option value="">전체 분야</option><option value="쇼츠">쇼츠</option><option value="실사용 리뷰">실사용 리뷰</option></select>
+      <select id="reg"><option value="">전체 지역</option><option value="US">🇺🇸 미국·서양</option><option value="JP">🇯🇵 일본</option></select>
       <input type="search" id="q" placeholder="제목·채널·제품 검색">
     </div>
     <div class="muted" id="summary"></div><br>
@@ -391,8 +393,8 @@ async function hunterPage(st) {
   if (!index.length) { document.getElementById("grid").innerHTML = `<div class="empty">아직 보고서가 없습니다.</div>`; return; }
 
   const SORTS = {
-    run: [["score", "종합점수순"], ["style", "스타일 일치순"], ["views_per_hour", "시간당 조회순"], ["outlier", "아웃라이어순"], ["buy_hits", "구매의도순"], ["views", "조회수순"]],
-    trend: [["appear", "반복 등장순"], ["gain", "증가 조회순"], ["style", "스타일 일치순"], ["views", "조회수순"]],
+    run: [["score", "종합순 (아웃라이어 중심)"], ["outlier", "아웃라이어순"], ["story", "스토리텔링순"], ["style", "스타일 일치순"], ["views_per_hour", "시간당 조회순"], ["views", "조회수순"]],
+    trend: [["appear", "반복 등장순"], ["outlier", "아웃라이어순"], ["gain", "증가 조회순"], ["story", "스토리텔링순"], ["views", "조회수순"]],
   };
   let view = "run", rows = [], meta = "";
   const $ = (id) => document.getElementById(id);
@@ -402,7 +404,7 @@ async function hunterPage(st) {
     if (view === "run") {
       const run = await getJSON(`data/${st.id}/${$("run").value}`, { videos: [] });
       rows = run.videos;
-      meta = `${kst(run.time)} 보고 · 최근 ${run.days}일 업로드 · ${rows.length}개` + (run.excluded ? ` · 걸러냄: ${Object.entries(run.excluded).filter(([k]) => k !== "수집").map(([k, v]) => `${k} ${v}`).join(", ")} (수집 ${run.excluded["수집"]})` : "");
+      meta = `${kst(run.time)} 보고 · ${rows.length}개` + (run.excluded ? ` · 걸러냄: ${Object.entries(run.excluded).filter(([k]) => k !== "수집").map(([k, v]) => `${k} ${v}`).join(", ")} (수집 ${run.excluded["수집"]})` : "");
     } else {
       const files = index.slice(0, Number($("range").value));
       const runs = (await Promise.all(files.map((e) => getJSON(`data/${st.id}/${e.file}`, null)))).filter(Boolean);
@@ -419,28 +421,32 @@ async function hunterPage(st) {
   }
 
   function render() {
-    const sort = $("sort").value, q = $("q").value.trim().toLowerCase();
-    let list = rows.filter((r) => !q || `${r.title} ${r.channel} ${r.product_en} ${r.product_ko}`.toLowerCase().includes(q));
+    const sort = $("sort").value, q = $("q").value.trim().toLowerCase(), cat = $("cat").value, reg = $("reg").value;
+    let list = rows.filter((r) => (!q || `${r.title} ${r.channel} ${r.product_en} ${r.product_ko}`.toLowerCase().includes(q))
+      && (!cat || (r.category || "쇼츠") === cat) && (!reg || (r.region || "US") === reg));
     list = [...list].sort((a, b) => (b[sort] ?? 0) - (a[sort] ?? 0));
-    $("summary").textContent = meta + (list.length !== rows.length ? ` · 검색 결과 ${list.length}개` : "");
+    $("summary").textContent = meta + (list.length !== rows.length ? ` · 필터 결과 ${list.length}개` : "");
     const trend = view === "trend";
     $("grid").innerHTML = list.length ? list.map((r, i) => {
       const stats = trend ? [["rep", r.appear + "회", "반복 등장"], ["hot", "+" + fmt(r.gain), "증가 조회"], ["", fmt(r.views), "현재 조회"], ["", "x" + r.outlier, "아웃라이어"]]
-        : [["hot", fmt(r.views_per_hour), "시간당 조회"], [r.outlier >= 5 ? "hot" : "", "x" + r.outlier, "아웃라이어"], [r.buy_hits >= 3 ? "buy" : "", r.buy_hits, "구매의도 댓글"],
+        : [["hot", "x" + r.outlier, "아웃라이어"], ["", fmt(r.views_per_hour), "시간당 조회"], [r.story >= 7 ? "buy" : "", r.story != null ? r.story + "/10" : "-", "스토리"],
            ["", fmt(r.views), "조회수"], ["", fmt(r.subs), "구독자"], ["", r.like_rate + "%", "좋아요율"]];
+      const url = (r.category || "쇼츠") === "쇼츠" ? shortUrl(r.video_id) : `https://www.youtube.com/watch?v=${encodeURIComponent(r.video_id)}`;
+      const flag = (r.region || "US") === "JP" ? "🇯🇵" : "🇺🇸";
+      const len = r.seconds >= 120 ? `${Math.round(r.seconds / 60)}분` : `${r.seconds}초`;
       return `<article class="card">
-        <a class="thumb" href="${shortUrl(r.video_id)}" target="_blank" rel="noopener">
+        <a class="thumb" href="${url}" target="_blank" rel="noopener">
           <img loading="lazy" src="${thumb(r.video_id)}" alt="" onerror="this.style.visibility='hidden'">
           <span class="badge tl">#${i + 1}</span><span class="badge tr">${trend ? r.appear + "회" : r.score}</span>
-          <span class="badge bl">스타일 ${r.style}/10</span><span class="badge br">${r.seconds}초</span></a>
+          <span class="badge bl">${flag} ${esc(r.field || "미국 쇼츠")}</span><span class="badge br">${len}</span></a>
         <div class="body">
-          <div class="title"><a href="${shortUrl(r.video_id)}" target="_blank" rel="noopener">${esc(r.title)}</a></div>
+          <div class="title"><a href="${url}" target="_blank" rel="noopener">${esc(r.title)}</a></div>
           <div class="sub">${esc(r.channel)}${r.country ? ` · ${esc(r.country)}` : ""} · ${ago(r.published.replace(" ", "T") + "Z")} 업로드</div>
           ${r.summary_ko ? `<div class="note"><b>내용</b>${esc(r.summary_ko)}</div>` : ""}
           ${r.fun_ko ? `<div class="note"><b>포인트</b>${esc(r.fun_ko)}</div>` : ""}
+          ${r.story_ko ? `<div class="note"><b>📖 스토리</b>${esc(r.story_ko)}</div>` : ""}
           <div class="stats">${stats.map(([c, b, s]) => `<div class="stat ${c}"><b>${esc(b)}</b><small>${s}</small></div>`).join("")}</div>
           <div class="chips">${r.product_ko || r.product_en ? `<span class="prod">${esc(r.product_ko || r.product_en)}</span>` : ""}${r.keywords.split(", ").map((k) => `<span>${esc(k)}</span>`).join("")}</div>
-          ${r.buy_examples ? `<details><summary>구매의도 댓글 보기</summary>${r.buy_examples.split(" | ").map((t) => `<p>${esc(t)}</p>`).join("")}</details>` : ""}
         </div></article>`;
     }).join("") : `<div class="empty">조건에 맞는 영상이 없습니다.</div>`;
   }
@@ -450,7 +456,7 @@ async function hunterPage(st) {
     document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("on", x === t));
     view = t.dataset.v; $("run").hidden = view !== "run"; $("range").hidden = view !== "trend"; setSorts(); load();
   });
-  $("run").onchange = load; $("range").onchange = load; $("sort").onchange = render; $("q").oninput = render;
+  $("run").onchange = load; $("range").onchange = load; $("sort").onchange = render; $("cat").onchange = render; $("reg").onchange = render; $("q").oninput = render;
   load();
 }
 
@@ -559,7 +565,8 @@ async function scoutPage(st) {
       ${p.hook_ko || p.test_ko || p.reaction_ko ? `<div class="idea">
         ${p.hook_ko ? `<div>🎬 <b>${esc(p.hook_ko)}</b></div>` : ""}
         ${p.test_ko ? `<div>📷 ${esc(p.test_ko)}</div>` : ""}
-        ${p.reaction_ko ? `<div>😲 ${esc(p.reaction_ko)}</div>` : ""}</div>` : ""}
+        ${p.reaction_ko ? `<div>😲 ${esc(p.reaction_ko)}</div>` : ""}
+        ${p.story_ko ? `<div>📖 <b>스토리</b> ${esc(p.story_ko)}</div>` : ""}</div>` : ""}
       ${p.caution_ko ? `<div class="note"><b>⚠️ 주의</b>${esc(p.caution_ko)}</div>` : ""}
       ${!p.evaluated ? `<div class="sub">AI 평가 대기 중 — 다음 근무 때 평가됩니다</div>` : ""}
       <div class="shop">

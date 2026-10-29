@@ -119,8 +119,10 @@ EXTRACT_SYSTEM = """너는 한국 쇼츠 리뷰 채널(리뷰하는회사원·�
 - hook_ko: 첫 3초에 쓸 말 또는 쇼츠 제목 (20자 이내, "~라고?", "진짜 될까?" 같은 호기심형)
 - test_ko: 사서 어떻게 써보며 찍을지 (50자 이내)
 - reaction_ko: 예상되는 반전/시청자 반응 (35자 이내)
+- story_ko: 리뷰하는회사원처럼 단순 소개가 아닌 '이야기'로 찍는 구성안 (80자 이내,
+  "상황 설정 → 기대/의문 → 써보기 → 반전 → 마무리" 흐름. 예: "부장님이 모기 때문에 짜증 → 신기한 패치 몰래 붙여드림 → 진짜 안 가려움? → 부장님 반응")
 - caution_ko: 주의할 점 (없으면 빈 문자열)
-JSON으로만 답해: {"products":[{"video_id":"","name_en":"","name_ko":"","curiosity":0,"wow_ko":"","hook_ko":"","test_ko":"","reaction_ko":"","caution_ko":""}]}"""
+JSON으로만 답해: {"products":[{"video_id":"","name_en":"","name_ko":"","curiosity":0,"wow_ko":"","hook_ko":"","test_ko":"","reaction_ko":"","story_ko":"","caution_ko":""}]}"""
 
 CAPTURE_SYSTEM = EXTRACT_SYSTEM.split("영상당 최대 4개")[0].replace(
     "아마존/테무 제품을 소개·시연·하울하는 해외 YouTube 영상의 제목, 설명, 챕터를 보고\n영상에 나오는 '실물 제품'을 뽑아서, ",
@@ -128,15 +130,15 @@ CAPTURE_SYSTEM = EXTRACT_SYSTEM.split("영상당 최대 4개")[0].replace(
     "해외 리뷰 영상에서 찾은 제품(found_in_video)을 보고\n") + """각 제품마다 (한국어, 짧게):
 - id: 입력의 id 그대로
 - name_en: 영어 검색어 / name_ko: 쿠팡 검색용 한국어 이름
-- curiosity, wow_ko, hook_ko, test_ko, reaction_ko, caution_ko: 위와 같은 기준
+- curiosity, wow_ko, hook_ko, test_ko, reaction_ko, story_ko, caution_ko: 위와 같은 기준
 사장님 메모가 있으면 가장 중요한 단서로 써.
-JSON으로만 답해: {"products":[{"id":"","name_en":"","name_ko":"","curiosity":0,"wow_ko":"","hook_ko":"","test_ko":"","reaction_ko":"","caution_ko":""}]}"""
+JSON으로만 답해: {"products":[{"id":"","name_en":"","name_ko":"","curiosity":0,"wow_ko":"","hook_ko":"","test_ko":"","reaction_ko":"","story_ko":"","caution_ko":""}]}"""
 
-FIELDS = ("name_en", "name_ko", "wow_ko", "hook_ko", "test_ko", "reaction_ko", "caution_ko")
+FIELDS = ("name_en", "name_ko", "wow_ko", "hook_ko", "test_ko", "reaction_ko", "story_ko", "caution_ko")
 
 
 def clean(p):
-    out = {k: str(p.get(k) or "")[:120] for k in FIELDS}
+    out = {k: str(p.get(k) or "")[:160] for k in FIELDS}
     try:
         out["curiosity"] = max(0, min(10, int(p.get("curiosity") or 0)))
     except (TypeError, ValueError):
