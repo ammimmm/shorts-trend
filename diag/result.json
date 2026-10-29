@@ -1,42 +1,6 @@
 {
- "token_len": 377,
- "proxy_env": {
-  "HTTPS_PROXY": false,
-  "https_proxy": false,
-  "HTTP_PROXY": false
- },
- "A models.github.ai vnd redirects=False": {
-  "status": 200,
-  "ctype": "text/plain",
-  "location": null,
-  "history": [],
-  "body": "OK\r\n"
- },
- "A models.github.ai vnd redirects=True": {
-  "status": 200,
-  "ctype": "text/plain",
-  "location": null,
-  "history": [],
-  "body": "OK\r\n"
- },
- "B models.github.ai json redirects=False": {
-  "status": 200,
-  "ctype": "text/plain",
-  "location": null,
-  "history": [],
-  "body": "OK\r\n"
- },
- "B models.github.ai json redirects=True": {
-  "status": 200,
-  "ctype": "text/plain",
-  "location": null,
-  "history": [],
-  "body": "OK\r\n"
- },
- "C azure endpoint redirects=False": {
-  "error": "HTTPSConnectionPool(host='models.inference.ai.azure.com', port=443): Max retries exceeded with url: /chat/completions (Caused by NameResolutionError(\"HTTPSConnection(host='models.inference.ai.azure.com', port=443): Failed to resolve 'models.inference.ai.azure.com' ([Errno -2] Name or service not kno"
- },
- "C azure endpoint redirects=True": {
-  "error": "HTTPSConnectionPool(host='models.inference.ai.azure.com', port=443): Max retries exceeded with url: /chat/completions (Caused by NameResolutionError(\"HTTPSConnection(host='models.inference.ai.azure.com', port=443): Failed to resolve 'models.inference.ai.azure.com' ([Errno -2] Name or service not kno"
- }
+ "catalog": "HTTP/2 200 \ncontent-type: text/plain\n\nOK\n",
+ "chat": "HTTP/2 200 \ncontent-type: text/plain\n\nOK\n",
+ "chat_no_token": "HTTP/2 200 \ncontent-type: text/plain\n\nOK\n",
+ "dns": "140.82.113.21   glb-db52c2cf8be544.github.com models.github.ai\n"
 }
