@@ -97,11 +97,19 @@ class AI:
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
         if json_mode:
             body["response_format"] = {"type": "json_object"}
-        resp = requests.post(AI_URL, json=body, timeout=120, headers={
+        headers = {
             "Authorization": f"Bearer {self.token}",
             "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
             "Content-Type": "application/json",
-        })
+        }
+        # 주소가 다른 곳으로 넘겨지면(redirect) requests는 POST를 GET으로 바꿔 내용이 사라짐 → 직접 다시 POST
+        url = AI_URL
+        for _ in range(3):
+            resp = requests.post(url, json=body, timeout=120, headers=headers, allow_redirects=False)
+            if resp.status_code not in (301, 302, 303, 307, 308) or not resp.headers.get("Location"):
+                break
+            url = requests.compat.urljoin(url, resp.headers["Location"])
         self.calls += 1
         if resp.status_code != 200:
             raise RuntimeError(f"{model} HTTP {resp.status_code}: {resp.text[:200]}")
