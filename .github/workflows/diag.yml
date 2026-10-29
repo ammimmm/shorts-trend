@@ -22,7 +22,7 @@ jobs:
           model: openai/gpt-4.1-mini
       - if: always()
         run: |
-          echo '${{ steps.ai.outputs.response }}' > diag/action_result.txt
+          echo "outcome=${{ steps.ai.outcome }}" > diag/action_result.txt; cat "${{ steps.ai.outputs.response-file }}" >> diag/action_result.txt 2>/dev/null || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add diag && git commit -q -m "AI 점검 결과" && git pull -q --rebase origin main && git push -q || true
