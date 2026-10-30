@@ -1,5 +1,23 @@
 [
  {
+  "file": "runs/20261030_1853.json",
+  "time": "2026-10-30T18:53:27Z",
+  "count": 32,
+  "new": 32,
+  "mode": "auto",
+  "site": "both",
+  "captured": 0,
+  "pool": 173,
+  "quota": 404,
+  "searched": [
+   "아마존: amazon kitchen gadgets review",
+   "아마존: amazon gadget demo",
+   "테무: temu kitchen gadgets",
+   "테무: temu gadget unboxing"
+  ],
+  "ai": "실패 → 규칙으로 대체 (openai/gpt-4o-mini 응답 형식 이상 (text/plain): 'OK\\r\\n')"
+ },
+ {
   "file": "runs/20261030_0744.json",
   "time": "2026-10-30T07:44:03Z",
   "count": 22,
