@@ -1,5 +1,23 @@
 [
  {
+  "file": "runs/20261101_0811.json",
+  "time": "2026-11-01T08:11:23Z",
+  "count": 17,
+  "new": 17,
+  "mode": "auto",
+  "site": "both",
+  "captured": 0,
+  "pool": 236,
+  "quota": 404,
+  "searched": [
+   "아마존: amazon gadgets tested",
+   "아마존: amazon product demo",
+   "테무: temu haul testing",
+   "테무: temu product demo"
+  ],
+  "ai": "실패 → 규칙으로 대체 (openai/gpt-4o-mini 응답 형식 이상 (text/plain): 'OK\\r\\n')"
+ },
+ {
   "file": "runs/20261031_1756.json",
   "time": "2026-10-31T17:56:28Z",
   "count": 20,
