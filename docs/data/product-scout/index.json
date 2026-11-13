@@ -1,5 +1,23 @@
 [
  {
+  "file": "runs/20261113_0847.json",
+  "time": "2026-11-13T08:47:40Z",
+  "count": 16,
+  "new": 16,
+  "mode": "auto",
+  "site": "both",
+  "captured": 0,
+  "pool": 598,
+  "quota": 404,
+  "searched": [
+   "아마존: amazon home finds tested",
+   "아마존: amazon product test",
+   "테무: strange temu products",
+   "테무: temu finds unboxing"
+  ],
+  "ai": "실패 → 규칙으로 대체 (openai/gpt-4o-mini 응답 형식 이상 (text/plain): 'OK\\r\\n')"
+ },
+ {
   "file": "runs/20261112_2107.json",
   "time": "2026-11-12T21:07:49Z",
   "count": 10,
