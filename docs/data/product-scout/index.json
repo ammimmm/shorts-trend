@@ -1,5 +1,23 @@
 [
  {
+  "file": "runs/20261114_0803.json",
+  "time": "2026-11-14T08:03:49Z",
+  "count": 7,
+  "new": 7,
+  "mode": "auto",
+  "site": "both",
+  "captured": 0,
+  "pool": 600,
+  "quota": 404,
+  "searched": [
+   "아마존: weird amazon products tested",
+   "아마존: amazon gadget demo",
+   "테무: weird temu products tested",
+   "테무: temu gadget unboxing"
+  ],
+  "ai": "실패 → 규칙으로 대체 (openai/gpt-4o-mini 응답 형식 이상 (text/plain): 'OK\\r\\n')"
+ },
+ {
   "file": "runs/20261113_2039.json",
   "time": "2026-11-13T20:39:57Z",
   "count": 17,

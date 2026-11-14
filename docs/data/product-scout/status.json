@@ -1,9 +1,9 @@
 {
- "time": "2026-11-13T20:39:52Z",
+ "time": "2026-11-14T08:03:43Z",
  "ok": true,
- "message": "새 제품 아마존 13개, 테무 4개",
- "found": 17,
+ "message": "새 제품 아마존 6개, 테무 1개",
+ "found": 7,
  "ai": "실패 → 규칙으로 대체 (openai/gpt-4o-mini 응답 형식 이상 (text/plain): 'OK\\r\\n')",
  "quota": 404,
- "seconds": 5
+ "seconds": 6
 }
